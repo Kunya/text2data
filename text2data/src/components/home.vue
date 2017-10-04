@@ -15,7 +15,7 @@
      </ul>
     <div>
       <input type="text" v-model="newProject">
-      <button @click="addProject">Add new project</button>
+      <button @click="addNewProject">Add new project</button>
      </div>
     </div>
      <router-view></router-view>
@@ -40,10 +40,15 @@ export default{
         },
     methods:{
         ...mapActions([
-            'test'])
+            'fetchProjectList',
+            'addProject']),
+        addNewProject:function(label){
+            this.addProject(this.newProject);
+            this.newProject="";
+        }    
     },    
     mounted: function(){
-        this.test();
+        this.fetchProjectList();
     }    
     
 };
