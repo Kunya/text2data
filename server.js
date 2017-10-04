@@ -1,84 +1,79 @@
-//
-// # SimpleServer
-//
-// A simple chat server using Socket.IO, Express, and Async.
-//
-var http = require('http');
-var path = require('path');
+var http = require('http'),
+    path = require('path'),
+    methods = require('methods'),
+    express = require('express'),
+    bodyParser = require('body-parser'),
+    session = require('express-session'),
+    passport = require('passport'),
+    errorhandler = require('errorhandler'),
+    mongoose = require('mongoose');
 
-var async = require('async');
-var socketio = require('socket.io');
-var express = require('express');
+var isProduction = false; //process.env.NODE_ENV === 'production';
 
-//
-// ## SimpleServer `SimpleServer(obj)`
-//
-// Creates a new instance of SimpleServer with the following options:
-//  * `port` - The HTTP port to listen on. If `process.env.PORT` is set, _it overrides this value_.
-//
-var router = express();
-var server = http.createServer(router);
-var io = socketio.listen(server);
+// Create global app object
+var app = express();
 
-router.use(express.static(path.resolve(__dirname, 'client')));
-var messages = [];
-var sockets = [];
 
-io.on('connection', function (socket) {
-    messages.forEach(function (data) {
-      socket.emit('message', data);
-    });
 
-    sockets.push(socket);
+// Normal express config defaults
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-    socket.on('disconnect', function () {
-      sockets.splice(sockets.indexOf(socket), 1);
-      updateRoster();
-    });
+app.use(express.static(__dirname + '/public'));
 
-    socket.on('message', function (msg) {
-      var text = String(msg || '');
-
-      if (!text)
-        return;
-
-      socket.get('name', function (err, name) {
-        var data = {
-          name: name,
-          text: text
-        };
-
-        broadcast('message', data);
-        messages.push(data);
-      });
-    });
-
-    socket.on('identify', function (name) {
-      socket.set('name', String(name || 'Anonymous'), function (err) {
-        updateRoster();
-      });
-    });
-  });
-
-function updateRoster() {
-  async.map(
-    sockets,
-    function (socket, callback) {
-      socket.get('name', callback);
-    },
-    function (err, names) {
-      broadcast('roster', names);
-    }
-  );
+if (!isProduction) {
+  app.use(errorhandler());
 }
 
-function broadcast(event, data) {
-  sockets.forEach(function (socket) {
-    socket.emit(event, data);
+/*if(isProduction){
+  mongoose.connect(process.env.MONGODB_URI);
+} else {
+  mongoose.connect('mongodb://localhost/conduit');
+  mongoose.set('debug', true);
+}*/
+
+//require('./models/User');
+//require('./models/Article');
+//require('./models/Comment');
+//require('./config/passport');
+
+//app.use(require('./routes'));
+
+/// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+/// error handlers
+
+// development error handler
+// will print stacktrace
+if (!isProduction) {
+  app.use(function(err, req, res, next) {
+    console.log(err.stack);
+
+    res.status(err.status || 500);
+
+    res.json({'errors': {
+      message: err.message,
+      error: err
+    }});
   });
 }
 
-server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
-  var addr = server.address();
-  console.log("Chat server listening at", addr.address + ":" + addr.port);
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({'errors': {
+    message: err.message,
+    error: {}
+  }});
+});
+
+// finally, let's start our server...
+var server = app.listen( process.env.PORT || 3000, function(){
+  console.log('Listening on port ' + server.address().port);
 });
