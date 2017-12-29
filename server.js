@@ -3,53 +3,58 @@ var http = require('http'),
     methods = require('methods'),
     express = require('express'),
     bodyParser = require('body-parser'),
-    session = require('express-session'),
-    passport = require('passport'),
+    cookieParser = require('cookie-parser'),
     errorhandler = require('errorhandler'),
     mongoose = require('mongoose');
 
+
+var config=require('./server/config.json');
 var isProduction = false; //process.env.NODE_ENV === 'production';
 
-// Create global app object
 var app = express();
-
-
-
 // Normal express config defaults
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ limit:'1mb', extended: false }));
+app.use(bodyParser.json({limit: '1mb'}));
 
-app.use(express.static(__dirname + '/public'));
+
+mongoose.Promise = global.Promise;
+if(isProduction){
+  mongoose.connect(process.env.MONGODB_URI);
+} else {
+  var config=require('./server/config.json');
+   mongoose.connect(config.dataBase.connectionString, { useMongoClient: true });
+}
+
+
+//router.all('/api/*', requireAuthentication);
+var userAPI = require('./server/userController.js');
+var projectAPI = require('./server/projectCtrl.js');
+
+app.use('/api/user', userAPI);
+app.use('/api/project',projectAPI);
+//app.use('/api/data',dataAPI);
+
+
+
+
+app.use(express.static(__dirname + '/text2data/dist'));
 
 if (!isProduction) {
   app.use(errorhandler());
 }
 
-/*if(isProduction){
-  mongoose.connect(process.env.MONGODB_URI);
-} else {
-  mongoose.connect('mongodb://localhost/conduit');
-  mongoose.set('debug', true);
-}*/
 
-//require('./models/User');
-//require('./models/Article');
-//require('./models/Comment');
-//require('./config/passport');
 
-//app.use(require('./routes'));
-
-/// catch 404 and forward to error handler
+// catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
-/// error handlers
-
-// development error handler
-// will print stacktrace
+// error handlers
+// development error handler will print stacktrace
 if (!isProduction) {
   app.use(function(err, req, res, next) {
     console.log(err.stack);
@@ -77,3 +82,5 @@ app.use(function(err, req, res, next) {
 var server = app.listen( process.env.PORT || 3000, function(){
   console.log('Listening on port ' + server.address().port);
 });
+
+
