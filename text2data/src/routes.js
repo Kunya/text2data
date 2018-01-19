@@ -10,10 +10,10 @@ import admin from './components/admin.vue'
 
 export const routes = [
   { path: '/', component: landingPage },
-  { path: 'user', component: user, children: [
-     { path: 'admin', component: admin},
-     { path: 'home', component: home, children: [
-        { path: 'project/:pid/', component: project, props:true, children: [  
+  { path: '/user', component: user, children: [
+     { path: '/admin', component: admin},
+     { path: '/', component: home, children: [
+        { path: 'project/:pid', component: project, props:true, children: [  
           { path: '', component: settings},
           { path: 'inputs', component: inputs},
           { path: 'outputs', component: outputs}

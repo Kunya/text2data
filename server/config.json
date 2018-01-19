@@ -1,0 +1,9 @@
+{
+ "storagePath":"./userData",
+ "dataBase":
+ {
+ "connectionString":"mongodb://node:5G6dh%25hd_8hd@ds157839.mlab.com:57839/nectarine"
+ },
+ "secret":"4^%hdhkHGvd93hG6d_3hDggbx./;s",
+ "redis":""
+}

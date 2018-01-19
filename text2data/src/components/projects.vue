@@ -8,7 +8,7 @@
       <li>
        <router-link :to="'/user/project/' + pid + '/outputs'">Outputs</router-link>
       </li>
-      <li class="is-active">
+      <li>
        <router-link :to="'/user/project/' + pid + '/'">Settings</router-link>
       </li>
       </ul>

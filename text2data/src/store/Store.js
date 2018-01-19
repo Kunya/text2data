@@ -20,8 +20,9 @@ export const store=new Vuex.Store({
     activeProject:{}
   },
   getters:{
-    isAdmin:function(state){return state.isAdmin;},
+    isAdmin:function(state){return state.user.isAdmin;},
     activeProject:function(state){ return state.activeProject;},
+    activeProjectInputs:function(state){ return state.activeProject.inputs;},
     isLogged:function(state) {return state.user.email!==""; },
     projectList:function(state) {return state.projects;},
     userList:function(state) {return state.users;},
@@ -112,6 +113,7 @@ export const store=new Vuex.Store({
     },
     addProject:function(state,project){ state.projects.push(project); state.activeProject=project; },
     addUser:function(state,item){ state.projects.push(item); state.activeUser=item; },
+    addInputFile:function(state,item){ state.activeProject.inputs.push(item);},
     updateActiveProject:function(state,project){ state.activeProject=project; },
     updateSelectedUser:function(state,item){ state.activeUser=item; },
     setProjectList:function(state,list){ state.projects = list; },
