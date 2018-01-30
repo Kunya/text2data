@@ -8,6 +8,6 @@ echo "Launching service: Spark"
 node ./server/service-spark.js &
 echo "Launching Job Manager"
 node ./server/manager.js &
-echo "Launching HTTPs server"
-node ./server.js
+echo "Please Launch HTTP server manually"
+#node ./server.js
 

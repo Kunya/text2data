@@ -6,6 +6,9 @@
        <router-link :to="'/user/project/' + pid + '/inputs'">Inputs</router-link>
       </li>
       <li>
+       <router-link :to="'/user/project/' + pid + '/jobs'">Jobs</router-link>
+      </li>
+      <li>
        <router-link :to="'/user/project/' + pid + '/outputs'">Outputs</router-link>
       </li>
       <li>
@@ -21,12 +24,12 @@
 </template>
 
 <script>
-export default{
-    props: ['pid','uid'],
-    beforeRouteEnter(to,from,next){
-     next();    
-    }
-};
+ export default {
+  props: ['pid', 'uid'],
+  beforeRouteEnter(to, from, next) {
+   next();
+  }
+ };
 </script>
 
 <style>
