@@ -25,7 +25,19 @@
    
    </div>
    
+  
+   
   <div class="section has-text-centered">
+    
+  <div class="select">
+   <select v-model="jobType">
+    <option disabled value="">Please select job type</option>
+   <option value="lemmer">Lemmatize text</option>
+    <option value="textClustering">Cluster text</option>
+    <option value="textCoding">Text coding</option>
+   </select>
+   </div>
+   
    <a @click='addNewJob' class="button is-primary">
     Execute
    </a>    
@@ -38,6 +50,8 @@
     import { mapGetters } from 'vuex';
     import { mapMutations } from 'vuex';
     import axios from "axios";
+    import { mapActions } from 'vuex';
+
 
     // Add columns: column 2 - show selection.
     // Add execute button below.
@@ -47,6 +61,7 @@
 
         data: function() {
             return {
+                jobType: "lemmer",
                 stage: "",
                 selectedFile: -1,
                 error: "",
@@ -61,16 +76,18 @@
             ])
         },
         methods: {
-            ...mapMutations(['addInputFile', 'addNewJobAPI']),
-
+            ...mapMutations(['addInputFile']),
+            ...mapActions(['addNewJobAPI']),
             addNewJob: function() {
                 if (this.selectFile < 0) return alert("Please select an input file to process!");
 
                 var params = {};
-                params.projectId = this.activeProject.id;
-                params.jobType = 'textClustering';
-                params.options.inputFile = this.activeProjectInputs[this.selectFile].path + '/' + this.activeProjectInputs[this.selectFile].label;
-                this.addNewJobAPI(params);
+                params.projectId = this.activeProject._id;
+                params.jobType = this.jobType;
+                params.options = { "inputFile": this.activeProjectInputs[this.selectedFile].label };
+                this.addNewJobAPI(params).then((res) => {
+                    this.$router.push("/user/project/" + this.activeProject._id + "/jobs");
+                });
             },
             isSelected: function(index) {
                 return {

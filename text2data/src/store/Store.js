@@ -17,19 +17,19 @@ export const store = new Vuex.Store({
     },
     users: [],
     projects: [],
-    jobs: [{ label: "Job1" }],
-    activeProject: {}
+    jobs: [{ label: "Fake Job" }],
+    activeProjectObj: {}
   },
   getters: {
 
     jobList: function(state) { return state.jobs; },
     isAdmin: function(state) { return state.user.isAdmin; },
-    activeProject: function(state) { return state.activeProject; },
-    activeProjectInputs: function(state) { return state.activeProject.inputs; },
+    activeProject: function(state) { return state.activeProjectObj; },
+    activeProjectInputs: function(state) { return state.activeProjectObj.inputs; },
     isLogged: function(state) { return state.user.email !== ""; },
     projectList: function(state) { return state.projects; },
     userList: function(state) { return state.users; },
-    inputs: function(state) { if (state.activeProject) return state.activeProject.inputs; }
+    inputs: function(state) { if (state.activeProjectObj) return state.activeProjectObj.inputs; }
   },
   actions: {
     authUser: function({ commit }, payload) {
@@ -74,7 +74,7 @@ export const store = new Vuex.Store({
         }));
     },
     fetchJobList: function(context) {
-      Vue.http.get("/api/job/list")
+      Vue.http.get("/api/job/list", { params: { projectId: context.getters.activeProject._id } })
         .then((response) => {
           context.commit("setJobList", response.body);
         })
@@ -131,7 +131,7 @@ export const store = new Vuex.Store({
     setActiveProjectById: function(state, id) {
       let obj = state.projects.find(o => {
         if (o._id === id) {
-          state.activeProject = o;
+          state.activeProjectObj = o;
           return true;
         }
       });
@@ -144,11 +144,11 @@ export const store = new Vuex.Store({
       state.projects.push(item);
       state.activeUser = item;
     },
-    addInputFile: function(state, item) { state.activeProject.inputs.push(item); },
-    updateActiveProject: function(state, project) { state.activeProject = project; },
+    addInputFile: function(state, item) { state.activeProjectObj.inputs.push(item); },
+    updateActiveProject: function(state, project) { state.activeProjectObj = project; },
     updateSelectedUser: function(state, item) { state.activeUser = item; },
     setProjectList: function(state, list) { state.projects = list; },
-    setJobList: function(state, list) { state.jobList = list; },
+    setJobList: function(state, list) { state.jobs = list; },
     setUserList: function(state, list) { state.users = list; },
     setUserData: function(state, user) {
       state.user.email = user.email;

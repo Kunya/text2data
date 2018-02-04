@@ -1,96 +1,51 @@
 //const catchify = require('catchify');
 const Queue = require('bee-queue');
-const managerQueue = new Queue('manager', { removeOnSuccess: true });
-const lemmerQueue = new Queue('lemmer', { removeOnSuccess: true });
-const sparkQueue = new Queue('spark', { removeOnSuccess: true });
 
-/*
-async function example(promise) {
-  const [error, value] = await catchify(promise);
-  if (error) console.log(error);
+function processJob(jobType, optionns) {
+
+  return new Promise((resolve, reject) => {
+    console.log('Manager: Starting job type:' + jobType);
+    switch (jobType) {
+      case 'lemmer':
+        resolve(processFile(optionns.file, "lemmer"));
+        break;
+      case 'textClustering':
+        processFile(optionns.inputFile, "lemmer").then((res) => {
+          resolve(processFile(res, "spark"));
+        }).catch((err) => { reject(err); });
+        break;
+      default:
+        reject("Job type - " + jobType + " is not supported.");
+    }
+
+  });
+}
+
+/*async function clusterText(file) {
+
+  const lemmerFile = await processFile(file, "lemmer");
+  if (!lemmerFile) return console.log("Error with lemmer");
+  const sparkFile = await processFile(lemmerFile, "spark");
+  if (!sparkFile) return console.log("Error with spark");
+  console.log('Lemmer cool: ' + lemmerFile);
+  console.log('Spark cool: ' + sparkFile);
+
 }
 */
 
-managerQueue.process(function(job, done) {
+function processFile(file, queque) {
 
-  console.log(`Manager: processing job ${job.id}`);
+  return new Promise((resolve, reject) => {
+    console.log('Starting job in queue:' + queque + ', for file: ' + file);
 
-  switch (job.data.type) {
-    case "clustering":
-      processClustering(job, done);
-      break;
-    case "coding":
-      processCoding(job, done);
-      break;
-    default:
-      done("Unknown job type:" + job.data.type);
-  }
-});
+    const thatQueue = new Queue(queque, { removeOnSuccess: true });
 
-function processClustering(job, done) {
-
-  const fileName = job.data.fileName;
-  var jobLemmer = lemmerQueue.createJob({ file: fileName });
-
-  jobLemmer.on('progress', (progress) => {
-    job.reportProgress(progress / 2);
-  });
-
-
-  jobLemmer.on('succeeded', (result) => {
-
-    var sparkJob = sparkQueue.createJob({ file: result });
-    sparkJob.on('progress', (progress) => {
-      job.reportProgress(50 + progress / 2);
-    });
-
-    sparkJob.on('succeeded', (resFinal) => {
-      done(null, resFinal);
-    });
-
-    sparkJob.save().catch(function(err) {
-      return done("Error: Failed to add job for Spark service - " + err);
-    });
+    var job = thatQueue.createJob({ file: file });
+    job.on('failed', (err) => { reject(err); });
+    job.on('succeeded', (result) => { resolve(result); });
+    job.save().catch(function(err) { reject(err); });
 
   });
-
-  jobLemmer.save().catch(function(err) {
-    return done("Error: Failed to add job for Lemmer service - " + err);
-  });
-
 }
 
-function processCoding(job, done) {
-
-  const fileName = job.data.fileName;
-  var jobLemmer = lemmerQueue.createJob({ file: fileName });
-
-  jobLemmer.on('progress', (progress) => {
-    job.reportProgress(progress / 2);
-  });
-
-
-  jobLemmer.on('succeeded', (result) => {
-
-    var sparkJob = sparkQueue.createJob({ file: result });
-    sparkJob.on('progress', (progress) => {
-      job.reportProgress(50 + progress / 2);
-    });
-
-    sparkJob.on('succeeded', (resFinal) => {
-      done(null, resFinal);
-    });
-
-    sparkJob.save().catch(function(err) {
-      return done("Error: Failed to add job for Spark service - " + err);
-    });
-
-  });
-
-  jobLemmer.save().catch(function(err) {
-    return done("Error: Failed to add job for Lemmer service - " + err);
-  });
-
-}
-
-module.exports = managerQueue;
+module.exports = { processJob: processJob };
