@@ -73,6 +73,15 @@ export const store = new Vuex.Store({
           console.log(error.statusText);
         }));
     },
+    fetchActiveProject: function(context) {
+      Vue.http.get("/api/project/get/" + context.state.activeProjectObj._id)
+        .then((response) => {
+          context.commit("updateActiveProject", response.body);
+        })
+        .catch((error => {
+          console.log(error.statusText);
+        }));
+    },
     fetchJobList: function(context) {
       Vue.http.get("/api/job/list", { params: { projectId: context.getters.activeProject._id } })
         .then((response) => {

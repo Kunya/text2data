@@ -1,27 +1,67 @@
 <template>
   <div>
-    <div>
-      <h2>Data to process</h2>
-    <ul>
-      <li>Wave 1 data</li>
-      <li>Wave 2 data</li>
-      <li>Wave 3 data</li>
-    </ul>
-    <br/>
-    <span>Upload new data</span>
-    <input type="text"/>
-    <button>Select file</button>
-    </div>
-    <div>
-      <h2>Models</h2>
+     <h2>Project Outputs</h2>
+   <div>
+   <a @click='fetchActiveProject' class="button is-primary">
+    Refresh outputs
+   </a>    
+   </div>
+
+    <div class="section">
       <ul>
-        <li>model 1</li>
+          <li v-for="(item,index) in activeProject.outputs">
+              <a :href="getLink(item.label)" class="is-link" download>{{item.label}}</a>
+          </li>
       </ul>
+      <p class="help is-danger" v-show="!activeProject.outputs">No data processed yet</p>
     </div>
+   
   </div>
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
+  import { mapActions } from 'vuex';
+
+
+  // Add columns: column 2 - show selection.
+  // Add execute button below.
+  // Write execution with lemmer
+
+  export default {
+
+    data: function() {
+      return {
+        stage: "",
+        selectedFile: -1,
+        error: "",
+      };
+    },
+    computed: {
+      ...mapGetters([
+        'activeProject',
+      ])
+    },
+    methods: {
+      ...mapActions(['fetchActiveProject']),
+      isSelected: function(index) {
+        return {
+          'has-text-weight-bold': (this.selectedFile === index)
+        };
+      },
+      getLink: function(fname) {
+        return '/api/project/' + this.activeProject._id + '/download/' + fname;
+      },
+
+      selectFile: function(index) {
+        this.selectedFile = index;
+
+      },
+
+    }
+
+
+  };
 </script>
 
 <style>

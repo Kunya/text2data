@@ -10,7 +10,7 @@ myStem.start(); // Run mystem in separate process
 
 
 lemmerQueue.process(function(job, done) {
-    console.log(`Processing lemmer job ${job.id}`);
+    console.log(`Lemmer: pick job ${job.id}`);
     console.log('Data' + JSON.stringify(job.data));
 
     var fs = require('fs');
@@ -35,7 +35,9 @@ lemmerQueue.process(function(job, done) {
             }, function(err) { done(err); }).catch(console.error);
         }).then(function() {
 
-            var newFileName = path.dirname(job.data.file) + "/" + 'lem_' + path.basename(job.data.file);
+            var newFileName = path.join(job.data.folder, 'lem_' + path.basename(job.data.file));
+
+
 
             fs.writeFile(newFileName, lines.join('\n'), function(err) {
                 if (err) {

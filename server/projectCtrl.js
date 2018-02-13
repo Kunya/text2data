@@ -4,11 +4,19 @@ var express = require('express');
 var router = express.Router();
 var VerifyToken = require('./verifyToken.js');
 var multer = require('multer');
+var fileSystem = require('fs'),
+    path = require('path'),
+    myMkdirSync = require('./utilities.js');
+
+
 
 
 var storage = multer.diskStorage({
     destination: function(req, file, callback) {
-        callback(null, config.storagePath);
+        if (req.saveToFolder) { callback(null, req.saveToFolder); }
+        else {
+            callback(null, config.storagePath);
+        }
     },
     filename: function(req, file, callback) {
         callback(null, file.originalname);
@@ -17,7 +25,6 @@ var storage = multer.diskStorage({
 
 
 var uploadFile = multer({ storage: storage }).single('userData');
-router.use(uploadFile);
 
 
 router.post('/upload/:id', VerifyToken, function(req, res) {
@@ -27,6 +34,12 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
         if (err) return res.status(500).send("There was a problem finding item:" + req.params.id + ", " + err);
         if (!item) return res.status(404).send("No item found.");
 
+        req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'Inputs');
+        console.log("Saved folder");
+        try { fileSystem.statSync(req.saveToFolder); }
+        catch (err) { myMkdirSync(req.saveToFolder); }
+
+
         uploadFile(req, res, function(err) {
             if (err) {
                 return res.status(500).end("Error uploading file:" + err);
@@ -35,8 +48,7 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
 
             item.inputs.push({
                 label: req.file.originalname,
-                path: config.storagePath
-                //tags:[String]
+                //tag:String
             });
             item.markModified('inputs');
 
@@ -59,6 +71,36 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
 });
 
 ///
+router.get('/:id/download/:file', VerifyToken, async function(req, res) {
+
+    if (!req.params.id) return res.status(400).send('Missing project id in request');
+    if (!req.params.file) return res.status(400).send('Missing file in request');
+
+    //check project id & get info
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(400).send('Project not found, id: ' + req.body.id);
+
+    var filePath = path.join(config.storagePath, project._id.toString(), 'Outputs', path.basename(req.params.file));
+    if (!fileSystem.existsSync(filePath)) return res.status(400).send('File not found, name: ' + req.params.file);
+
+
+    var stat = fileSystem.statSync(filePath);
+
+    res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': stat.size
+    });
+
+    var readStream = fileSystem.createReadStream(filePath);
+    res.on('error', function(err) {
+        readStream.end();
+        console.log("Failed to send file:" + filePath + ", err:" + err);
+    });
+
+    // We replaced all the event handlers with a simple call to readStream.pipe()
+    readStream.pipe(res);
+
+});
 
 ///
 
@@ -118,6 +160,8 @@ router.put('/update/:id', VerifyToken, function(req, res) {
         res.status(200).send(user);
     });
 });
+
+
 
 
 module.exports = router;

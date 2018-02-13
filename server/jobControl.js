@@ -5,6 +5,7 @@ var VerifyToken = require('./verifyToken.js');
 var Job = require('./jobModel.js');
 var jobManager = require('./manager.js');
 var Project = require('./projectModel.js').Project;
+var path = require("path");
 
 router.post('/create', VerifyToken, async function(req, res) {
     if (!req.body.projectId) return res.status(400).send('Missing projectId field in request');
@@ -33,21 +34,26 @@ router.post('/create', VerifyToken, async function(req, res) {
 
     console.log('Job created');
     var options = {};
-    options.file = config.storagePath + '/' + req.body.options.inputFile;
-
+    options.file = path.join(config.storagePath, project._id.toString(), 'Inputs', req.body.options.inputFile);
+    options.tempFolder = path.join(config.storagePath, project._id.toString(), 'Temp');
+    options.outputFolder = path.join(config.storagePath, project._id.toString(), 'Outputs');
+    options.jobType = req.body.jobType;
+    options.project = project._id.toString();
     console.log(options.file);
     //var jobInQueue = jobQueue.createJob({ file: fileName });
-    jobManager.processJob(req.body.jobType, options).then((result) => {
+
+    jobManager.processJob(options).then((result) => {
         console.log("Job is completed!");
         newJob.status = 'Completed';
         newJob.save();
 
         project.outputs.push({
-            label: result,
-            path: project.path
+            label: path.basename(result)
         });
         project.markModified('outputs');
-        project.save;
+        project.save();
+
+
     }).catch((err) => {
         newJob.status = 'Failed:' + err;
         newJob.save();
@@ -77,6 +83,7 @@ router.get('/get/:id', VerifyToken, function(req, res) {
         return res.status(200).send(item);
     });
 });
+
 
 // DELETES ITEM FROM THE COLLECTION
 router.delete('/delete/:id', VerifyToken, function(req, res) {
