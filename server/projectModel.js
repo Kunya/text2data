@@ -3,7 +3,9 @@ var mongoose = require('mongoose');
 
 var fileSchema = new mongoose.Schema({
     label: { type: String, required: true },
-    tag: String
+    tag: String,
+    uploaded: Date,
+    owner: mongoose.Schema.Types.ObjectId
 });
 
 

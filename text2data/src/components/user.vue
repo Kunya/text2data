@@ -1,7 +1,5 @@
-
 <template>
  <div>    
-  <div class="section">
     <div class="columns">
     <div class="column box">    
      <div class="level">
@@ -15,10 +13,7 @@
        </div>
       </div>
       </div>
-    </div>
-  </div>
-    
-   <div class="level"></div>
+   </div>
     
    <div class="section">
          <router-view></router-view>
@@ -28,15 +23,15 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+ import { mapGetters } from 'vuex';
 
-export default{
-    computed:{
-        ...mapGetters([
-             'isAdmin'
-            ])
-        }
-};
+ export default {
+  computed: {
+   ...mapGetters([
+    'isAdmin'
+   ])
+  }
+ };
 </script>
 
 

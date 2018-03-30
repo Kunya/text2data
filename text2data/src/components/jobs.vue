@@ -1,11 +1,39 @@
 <template>
  <div>
   
-  <div class="section">
-   <a @click='fetchJobList' class="button is-primary">
+  <div class="box">
+    
+    <div class="select">
+     <select v-model="jobType">
+      <option value="-1" selected disabled hidden>Please select job type</option>
+      <option v-for="(job,index) in metaData.jobTypes" :value="index">{{job.label}}</option>
+      </select>
+    </div>
+    
+    <div v-if="jobType>=0">
+      <br/>        
+      <div class="tabs">
+       <ul>
+         <li v-for="(input,index) in metaData.jobTypes[jobType].inputs">
+             {{input.property}}
+         </li>
+        </ul>
+      </div>
+      <ul>
+        <li v-for="(item,index) in activeProject.inputs">
+          <a class="is-link" v-bind:class="">{{item.label}}</a>
+        </li>
+      </ul>
+     <hr/>
+     <a @click='addNewJob' class="button is-primary">Launch Job</a>
+     </div>
+
+  </div>
+  
+  <div class="box">
+   <a @click='fetchJobList' class="button is-info">
     Update Job List
    </a>    
-
   <div>
       <table class="table">
         <thead>
@@ -49,20 +77,40 @@
         data: function() {
             return {
                 stage: "",
+                jobType: -1,
                 selectedJob: -1,
                 error: "",
             };
         },
         mounted: function() {
-            this.fetchJobList();
+            this.fetchJobList().then((res) => {
+
+
+
+            });
         },
         computed: {
             ...mapGetters([
                 'jobList',
+                'metaData',
+                'activeProject'
             ])
         },
         methods: {
-            ...mapActions(['fetchJobList']),
+
+            ...mapActions(['fetchJobList', 'addNewJobAPI']),
+            addNewJob: function() {
+                if (this.selectFile < 0) return alert("Please select an input file to process!");
+
+                var params = {};
+                params.projectId = this.activeProject._id;
+                params.jobType = this.jobType;
+                params.options = { "inputFile": this.activeProject.inputs[this.selectedFile].label };
+                this.addNewJobAPI(params).then((res) => {
+
+                    this.$router.push("/user/project/" + this.activeProject._id + "/jobs");
+                });
+            },
             selectJob: function(index) {
                 this.selectedJob = index;
             },

@@ -1,16 +1,30 @@
 <template>
  <div>
   
-  <div class="section">Uploaded Text Data
+  <div class="columns">
+
+  <div class="column">      
+  <div class="box">
+      <span class="has-text-weight-bold">Uploaded Files</span>
+      <br></br>
+  <div>quick search</div>
+  <input type="text" v-model="searchText">
+  <select v-model="searchTag">
+    <option disabled value="">Select a Tag to filter</option>
+    <option value="">All</option>
+    <option value="testData">Data to process</option>
+    <option value="trainData">Train Data</option>
+    <option value="codeFrame">Codeframe</option>
+  </select>
+   <hr>
       <ul>
-          <li v-for="(item,index) in activeProject.inputs">
+          <li v-for="(item,index) in filteredList">
               <a class="is-link" v-bind:class="isSelected(index)" @click="selectFile(index)">{{item.label}}</a>
           </li>
       </ul>
       <p class="help is-danger" v-show="!activeProject.inputs">No data uploaded yet</p>
-  </div>
-   
-    
+
+   <hr>
    <div class="file has-name">
     <label class="file-label">
      <input type="file" name="file" :disabled="stage==='uploading'" v-on:change="fileChange($event.target.files)" />
@@ -22,28 +36,31 @@
     </label>
     <p class="help is-primary" v-show="stage==='uploading'">Uploading...</p>
     <p class="help is-primary" v-show="stage==='uploaded'">File was uploaded!</p>
-   
    </div>
-   
-  
-   
-  <div class="section has-text-centered">
-    
-  <div class="select">
-   <select v-model="jobType">
-    <option disabled value="">Please select job type</option>
-   <option value="lemmer">Lemmatize text</option>
-    <option value="textClustering">Cluster text</option>
-    <option value="textCoding">Text coding</option>
-   </select>
-   </div>
-   
-   <a @click='addNewJob' class="button is-primary">
-    Execute
-   </a>    
   </div>
+  </div>
+   
+  <div class="column">  
+    <div class="box">
+     <div v-if="selectedFile>=0">
+     <div><span class="has-text-weight-bold">Uploaded by:</span> {{activeProject.inputs[selectedFile].owner | friendlyNA}}</div>  
+     <div><span class="has-text-weight-bold">Uploaded at:</span> {{activeProject.inputs[selectedFile].uploaded | friendlyNA}}</div>  
+     <span class="has-text-weight-bold">Select File Tag</span>
+     <select v-model="activeProject.inputs[selectedFile].tag">
+      <option disabled value="">Select File Tag</option>
+      <option value="testData">Data to process</option>
+      <option value="trainData">Train Data</option>
+      <option value="codeFrame">Codeframe</option>
+     </select>
+     </div>
+    </div>
+  </div>
+  </div>
+   
   
- </div>
+</div>
+  
+
 </template>
 
 <script>
@@ -64,31 +81,40 @@
                 jobType: "lemmer",
                 stage: "",
                 selectedFile: -1,
+                selectedObj: {},
                 error: "",
                 files: new FormData(),
-                filename: ""
+                filename: "",
+                searchText: "",
+                searchTag: "",
             };
+        },
+        filters: {
+            friendlyNA: function(value) {
+                if (!value) return 'No information';
+                return value;
+            }
+
         },
         computed: {
             ...mapGetters([
-                'activeProject',
-                'activeProjectInputs'
-            ])
+                'activeProject'
+            ]),
+            filteredList: function() {
+                return this.activeProject.inputs.filter(item => {
+                    var sText = true;
+                    var sTag = true;
+
+                    if (this.searchTag) sTag = (item.tag === this.searchTag);
+                    if (this.searchText) sText = item.label.includes(this.searchText);
+
+                    return sText && sTag;
+                });
+            }
+
         },
         methods: {
             ...mapMutations(['addInputFile']),
-            ...mapActions(['addNewJobAPI']),
-            addNewJob: function() {
-                if (this.selectFile < 0) return alert("Please select an input file to process!");
-
-                var params = {};
-                params.projectId = this.activeProject._id;
-                params.jobType = this.jobType;
-                params.options = { "inputFile": this.activeProjectInputs[this.selectedFile].label };
-                this.addNewJobAPI(params).then((res) => {
-                    this.$router.push("/user/project/" + this.activeProject._id + "/jobs");
-                });
-            },
             isSelected: function(index) {
                 return {
                     'has-text-weight-bold': (this.selectedFile === index)
@@ -103,8 +129,9 @@
                 this.uploadFile();
             },
 
-            selectFile: function(index) {
+            selectFile(index) {
                 this.selectedFile = index;
+                this.selectedObj = this.activeProject.inputs[index];
             },
 
             uploadFile() {

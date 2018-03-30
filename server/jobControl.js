@@ -7,6 +7,21 @@ var jobManager = require('./manager.js');
 var Project = require('./projectModel.js').Project;
 var path = require("path");
 
+var Pusher = require('pusher');
+
+var pusher = new Pusher({
+    appId: config.pusher.appId,
+    key: config.pusher.key,
+    secret: config.pusher.secret,
+    cluster: 'eu',
+    encrypted: true
+});
+
+/*pusher.trigger('my-channel', 'my-event', {
+  "message": "hello world"
+});
+*/
+
 router.post('/create', VerifyToken, async function(req, res) {
     if (!req.body.projectId) return res.status(400).send('Missing projectId field in request');
     if (!req.body.jobType) return res.status(400).send('Missing jobType field in request');
@@ -61,6 +76,12 @@ router.post('/create', VerifyToken, async function(req, res) {
     });
 
 
+});
+
+
+// RETURN JOB TYPES
+router.get('/metadata', VerifyToken, function(req, res) {
+    return res.status(200).send(config.metadata.jobTypes);
 });
 
 

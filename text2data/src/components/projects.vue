@@ -3,7 +3,7 @@
      <div class="tabs">
       <ul>
       <li>
-       <router-link :to="'/user/project/' + pid + '/inputs'">Inputs</router-link>
+       <router-link :to="'/user/project/' + pid + '/inputs'">Files</router-link>
       </li>
       <li>
        <router-link :to="'/user/project/' + pid + '/jobs'">Jobs</router-link>

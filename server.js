@@ -31,10 +31,10 @@ else {
   mongoose.connect(config.dataBase.connectionString, { useMongoClient: true });
 }
 
-/*app.get('/api/help', function(req, res) {
+app.get('/api/help', function(req, res) {
   res.status(200).send("W.I.P.");
 });
-*/
+
 
 //router.all('/api/*', requireAuthentication);
 var userAPI = require('./server/userController.js');

@@ -10,3 +10,6 @@ old_webpack.config
 *.tar.gz
 server-sni.js
 /Logs/**
+/spark-jobserver/**
+/spark/**
+/server/Language/**

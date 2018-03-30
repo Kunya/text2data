@@ -15,6 +15,25 @@ export const store = new Vuex.Store({
       token: "",
       isAdmin: true
     },
+    metadata: {
+      fileTags: ["testData", "trainData", "codeFrame"],
+      jobTypes: [{
+          type: "lemmer",
+          label: "Lemmatize Text",
+          inputs: [{ property: "inputFile", value: "" }]
+        },
+        {
+          type: "textClustering",
+          label: "Text Clustering",
+          inputs: [{ property: "inputFile", value: "" }]
+        },
+        {
+          type: "textCoding",
+          label: "Text Supervised Coding",
+          inputs: [{ property: "trainData", value: "" }, { property: "testData", value: "" }, { property: "codeFrame", value: "" }]
+        }
+      ]
+    },
     users: [],
     projects: [],
     jobs: [{ label: "Fake Job" }],
@@ -22,6 +41,7 @@ export const store = new Vuex.Store({
   },
   getters: {
 
+    metaData: function(state) { return state.metadata; },
     jobList: function(state) { return state.jobs; },
     isAdmin: function(state) { return state.user.isAdmin; },
     activeProject: function(state) { return state.activeProjectObj; },
@@ -74,7 +94,7 @@ export const store = new Vuex.Store({
         }));
     },
     fetchActiveProject: function(context) {
-      Vue.http.get("/api/project/get/" + context.state.activeProjectObj._id)
+      return Vue.http.get("/api/project/get/" + context.state.activeProjectObj._id)
         .then((response) => {
           context.commit("updateActiveProject", response.body);
         })
@@ -83,7 +103,7 @@ export const store = new Vuex.Store({
         }));
     },
     fetchJobList: function(context) {
-      Vue.http.get("/api/job/list", { params: { projectId: context.getters.activeProject._id } })
+      return Vue.http.get("/api/job/list", { params: { projectId: context.getters.activeProject._id } })
         .then((response) => {
           context.commit("setJobList", response.body);
         })
@@ -93,7 +113,7 @@ export const store = new Vuex.Store({
     },
 
     fetchUserList: function(context) {
-      Vue.http.get("/api/user/list")
+      return Vue.http.get("/api/user/list")
         .then((response) => {
           context.commit("setUserList", response.body);
         })
