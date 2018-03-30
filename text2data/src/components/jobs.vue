@@ -11,56 +11,60 @@
     </div>
     
     <div v-if="jobType>=0">
+     <div class="box">
       <br/>        
-      <div class="tabs">
+       <div class="tabs">
        <ul>
-         <li v-for="(input,index) in metaData.jobTypes[jobType].inputs">
-             {{input.property}}
+        <template v-for="(tab, index) in metaData.jobTypes[jobType].inputs">
+         <li v-bind:class="isSelectedTab(index)">
+            <a @click="selectTab(index)">{{tab.property}}</a>
          </li>
-        </ul>
-      </div>
-      <ul>
-        <li v-for="(item,index) in activeProject.inputs">
-          <a class="is-link" v-bind:class="">{{item.label}}</a>
-        </li>
-      </ul>
-     <hr/>
-     <a @click='addNewJob' class="button is-primary">Launch Job</a>
-     </div>
+        </template>
+</ul>
+</div>
 
-  </div>
-  
-  <div class="box">
-   <a @click='fetchJobList' class="button is-info">
+<ul>
+    <li v-for="(file,ind) in activeProject.inputs">
+        <a class="is-link" v-bind:class="isSelectedFile(ind)" @click="selectFile(ind)">{{file.label}}</a>
+    </li>
+</ul>
+</div>
+<a @click='addNewJob' class="button is-primary">Launch Job</a>
+</div>
+
+</div>
+
+<div class="box">
+    <a @click='fetchJobList' class="button is-info">
     Update Job List
-   </a>    
-  <div>
-      <table class="table">
-        <thead>
-         <tr>
-         <th>Registered</th>
-         <th>Job Type</th>
-         <th>Input files</th>
-         <th>Current status</th>
-         </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item,index) in jobList" v-bind:class="isSelected(index)">
-              <td><a class="is-link" @click="selectJob(index)">
+   </a>
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Registered</th>
+                    <th>Job Type</th>
+                    <th>Input files</th>
+                    <th>Current status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in jobList" v-bind:class="isSelectedJob(index)">
+                    <td><a class="is-link" @click="selectJob(index)">
                   {{item.registered}}
                   </a>
-              </td>
-              <td>{{item.jobType}}</td>
-              <td>{{item.details}}</td>
-              <td>{{item.status}}</td>
-          </tr>
-         </tbody> 
-      </table>
-      <p class="help is-danger" v-show="!jobList">No jobs started yet. Please go to Inputs to start one.</p>
-     </div>
-   </div>
+                    </td>
+                    <td>{{item.jobType}}</td>
+                    <td>{{item.details}}</td>
+                    <td>{{item.status}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="help is-danger" v-show="!jobList">No jobs started yet. Please go to Inputs to start one.</p>
+    </div>
+</div>
 
- </div>
+</div>
 </template>
 
 <script>
@@ -78,16 +82,15 @@
             return {
                 stage: "",
                 jobType: -1,
-                selectedJob: -1,
+                tabIndex: 0,
+                jobIndex: -1,
+                fileIndex: -1,
+                fileSelections: [],
                 error: "",
             };
         },
         mounted: function() {
-            this.fetchJobList().then((res) => {
-
-
-
-            });
+            this.fetchJobList().then((res) => {});
         },
         computed: {
             ...mapGetters([
@@ -100,25 +103,58 @@
 
             ...mapActions(['fetchJobList', 'addNewJobAPI']),
             addNewJob: function() {
-                if (this.selectFile < 0) return alert("Please select an input file to process!");
+                var params = { options: {} };
+                var emptyTabs = "";
+                if (this.fileIndex > -1) this.fileSelections[this.tabIndex] = this.fileIndex; //save current selection
 
-                var params = {};
+
+                //check if user provided all inputs and prepare request to server
+                this.metaData.jobTypes[this.jobType].inputs.forEach((x, i) => {
+                    if (this.fileSelections[i] < 0) {
+                        emptyTabs = emptyTabs + ", " + this.metaData.jobTypes[this.jobType].inputs[i].property;
+                    }
+                    else {
+                        params.options[x.property] = this.activeProject.inputs[this.fileSelections[i]].label;
+                    }
+                });
+
+                if (emptyTabs) return alert("Please select an input file on tab(s): " + emptyTabs.substr(2));
+
                 params.projectId = this.activeProject._id;
-                params.jobType = this.jobType;
-                params.options = { "inputFile": this.activeProject.inputs[this.selectedFile].label };
+                params.jobType = this.metaData.jobTypes[this.jobType].type;
+                console.log(params);
                 this.addNewJobAPI(params).then((res) => {
 
-                    this.$router.push("/user/project/" + this.activeProject._id + "/jobs");
                 });
             },
-            selectJob: function(index) {
-                this.selectedJob = index;
+            selectFile: function(index) {
+                this.fileIndex = index;
             },
-            isSelected: function(index) {
+            isSelectedFile: function(index) {
                 return {
-                    'is-selected': (this.selectedJob === index)
+                    'has-text-weight-bold': (this.fileIndex === index)
                 };
-            }
+            },
+            selectTab: function(index) {
+                this.fileSelections[this.tabIndex] = this.fileIndex;
+                this.tabIndex = index;
+                this.fileIndex = this.fileSelections[this.tabIndex];
+            },
+            isSelectedTab: function(index) {
+                return {
+                    'is-active': (this.tabIndex === index)
+                };
+            },
+            selectJob: function(index) {
+                this.jobIndex = index;
+            },
+            isSelectedJob: function(index) {
+                return {
+                    'is-selected': (this.jobIndex === index)
+                };
+            },
+
+
 
         }
 
@@ -126,6 +162,6 @@
     };
 </script>
 
-/
+
 <style>
 </style>

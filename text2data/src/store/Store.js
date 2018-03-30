@@ -20,17 +20,17 @@ export const store = new Vuex.Store({
       jobTypes: [{
           type: "lemmer",
           label: "Lemmatize Text",
-          inputs: [{ property: "inputFile", value: "" }]
+          inputs: [{ property: "inputFile" }]
         },
         {
           type: "textClustering",
           label: "Text Clustering",
-          inputs: [{ property: "inputFile", value: "" }]
+          inputs: [{ property: "inputFile" }]
         },
         {
           type: "textCoding",
           label: "Text Supervised Coding",
-          inputs: [{ property: "trainData", value: "" }, { property: "testData", value: "" }, { property: "codeFrame", value: "" }]
+          inputs: [{ property: "trainData" }, { property: "testData" }, { property: "codeFrame" }]
         }
       ]
     },

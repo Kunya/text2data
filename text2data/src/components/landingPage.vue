@@ -18,7 +18,7 @@
      <div class="field">
       <label class="label has-text-left">Password</label>
       <div class="control">
-       <input class="input" type="password" placeholder="password" v-model="password">
+       <input class="input" type="password" placeholder="password" v-model="password" v-on:keyup.enter="loginUser()">
       </div>
       <p class="help is-danger" v-show="err">Sorry, email or password is incorrect</p>
      </div>
@@ -36,32 +36,34 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
-import { mapGetters } from 'vuex';
+ import { mapActions } from 'vuex';
+ import { mapGetters } from 'vuex';
 
-export default{
-   data: function() {
-        return {login:"", password: "", err:false};
-    },
-    computed:{
-        ...mapGetters([
-         'isLogged'])
-    },
-    methods:{
-        ...mapActions([
-            'authUser']),
-            
-    loginUser:function(){
-     this.err=false;
-     this.authUser({email:this.login, password:this.password}).then((response) => {
-          console.log(response);
-          this.$router.push("/user");
-        }).catch((error => {
-           if (error) this.err=true;
-        }));
-    }
+ export default {
+  data: function() {
+   return { login: "", password: "", err: false };
+  },
+  computed: {
+   ...mapGetters([
+    'isLogged'
+   ])
+  },
+  methods: {
+   ...mapActions([
+    'authUser'
+   ]),
+
+   loginUser: function() {
+    this.err = false;
+    this.authUser({ email: this.login, password: this.password }).then((response) => {
+     console.log(response);
+     this.$router.push("/user");
+    }).catch((error => {
+     if (error) this.err = true;
+    }));
    }
-};
+  }
+ };
 </script>
 
 <style>
