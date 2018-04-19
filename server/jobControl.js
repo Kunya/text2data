@@ -22,14 +22,35 @@ var pusher = new Pusher({
 });
 */
 
+function jobTypeIndex(jobType) {
+    var jobIndex = -1;
+
+    config.metadata.jobTypes.forEach((x, i) => {
+        if (x.type === jobType) jobIndex = i;
+    });
+    return jobIndex;
+}
+
+function checkMissingInputs(jobIndex, options) {
+    var str = "";
+
+    config.metadata.jobTypes[jobIndex].inputs.forEach((x, i) => {
+        if (!options[x.property]) str = str + ", " + x.property;
+    });
+
+    if (str) return str.substr(2);
+    return "";
+}
+
 router.post('/create', VerifyToken, async function(req, res) {
     if (!req.body.projectId) return res.status(400).send('Missing projectId field in request');
     if (!req.body.jobType) return res.status(400).send('Missing jobType field in request');
-    if (!req.body.options.inputFile) return res.status(400).send('Missing inputFile in options field in request');
 
-    //çheck job type 
-    var jobTypes = ['textClustering', 'textCoding', 'lemmer'];
-    if (jobTypes.indexOf(req.body.jobType) < 0) return res.status(400).send("Unknown job type. Use /api/help call to check valid options.");
+    var jobInd = jobTypeIndex(req.body.jobType);
+    if (jobInd < 0) return res.status(400).send('Unknown job type:' + req.body.jobType);
+    var missingInputs = checkMissingInputs(jobInd, req.body.options);
+    if (missingInputs) return res.status(400).send('Request options are incomplete, missing: ' + missingInputs);
+
 
     //check project id & get info
     const project = await Project.findById(req.body.projectId);
@@ -48,12 +69,16 @@ router.post('/create', VerifyToken, async function(req, res) {
     res.status(200).send({ status: "Created", jobId: newJob._id });
 
     console.log('Job created');
-    var options = {};
-    options.file = path.join(config.storagePath, project._id.toString(), 'Inputs', req.body.options.inputFile);
+    var options = { files: {} };
+    Object.entries(req.body.options).forEach(([key, value]) => {
+        options.files[key] = path.join(config.storagePath, project._id.toString(), 'Inputs', value);
+    });
+
     options.tempFolder = path.join(config.storagePath, project._id.toString(), 'Temp');
     options.outputFolder = path.join(config.storagePath, project._id.toString(), 'Outputs');
     options.jobType = req.body.jobType;
     options.project = project._id.toString();
+    options.job=newJob._id;
     console.log(options.file);
     //var jobInQueue = jobQueue.createJob({ file: fileName });
 

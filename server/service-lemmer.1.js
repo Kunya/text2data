@@ -10,7 +10,7 @@ myStem.start(); // Run mystem in separate process
 var job = { id: "whoa", data: {} };
 job.reportProgress = function(x) { console.log(100 * x); };
 job.data.folder = '/home/ubuntu/workspace/';
-job.data.file = '/home/ubuntu/workspace/test.txt';
+job.data.file = '/home/ubuntu/workspace/test_2lem.txt';
 whoa(job, function(x) {
     console.log(x);
     process.exit(101);

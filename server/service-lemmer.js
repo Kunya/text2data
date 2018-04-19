@@ -13,13 +13,17 @@ lemmerQueue.process(function(job, done) {
     console.log(`Lemmer: pick job ${job.id}`);
     console.log('Data' + JSON.stringify(job.data));
 
+    var textCol = 0;
+    if (job.data.textColumn) textCol = job.data.textColumn;
+    console.log("Text Column=" + textCol);
+
     var fs = require('fs');
     var lines = [];
     var searchterms = [];
     var columns = [];
     var linesCount = 1;
 
-    fs.readFile(job.data.file, function(err, data) {
+    fs.readFile(job.data.files.inputFile, function(err, data) {
         if (err) {
             return done(new Error("Can't read file:" + job.data.file));
         }
@@ -28,22 +32,25 @@ lemmerQueue.process(function(job, done) {
 
         Promise.each(lines, function(line, lInd) {
             columns = line.split('\t');
-            searchterms = columns[0].replace(new RegExp('"', 'g'), '').split(' ');
+            if (columns && columns[textCol]) {
+                searchterms = columns[textCol].replace(new RegExp('"', 'g'), '').split(' ');
 
-            if (searchterms.length > 0) return Promise.each(searchterms, function(term, ind) {
-                return myStem.lemmatize(term).then(function(lemma) { searchterms[ind] = lemma; });
-            }).then(function() {
-                columns[0] = searchterms.join(" ");
-                lines[lInd] = columns.join('\t');
-                if (lInd % 20 === 0) job.reportProgress((lInd / linesCount).toFixed(0));
-            }, function(err) { done(err); }).catch(console.error);
+                if (searchterms.length > 0) return Promise.each(searchterms, function(term, ind) {
+                    return myStem.lemmatize(term).then(function(lemma) { searchterms[ind] = lemma; });
+                }).then(function() {
+                    columns[textCol] = searchterms.join(" ");
+                    lines[lInd] = columns.join('\t');
+                    if (lInd % 20 === 0) job.reportProgress((lInd / linesCount).toFixed(0));
+                }, function(err) { done(err); }).catch(console.error);
 
-            return [];
+                return [];
+            }
+            else return;
 
         }).then(function() {
 
             console.log("Saving putput file...");
-            var newFileName = path.join(job.data.folder, 'lem_' + path.basename(job.data.file));
+            var newFileName = path.join(job.data.folder, 'lem_' + path.basename(job.data.files.inputFile));
             fs.writeFile(newFileName, lines.join('\n'), function(err) {
                 if (err) {
                     return done(new Error(err));

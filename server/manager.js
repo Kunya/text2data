@@ -22,13 +22,35 @@ function processJob(options) {
     console.log('Manager: Starting job type:' + options.jobType);
     switch (options.jobType) {
       case 'lemmer':
-        resolve(processFile({ file: options.file, folder: options.outputFolder }, "lemmer"));
+        resolve(processFile({ files: options.files, folder: options.outputFolder }, "lemmer"));
         break;
-      case 'textClustering':
-        processFile(options.inputFile, "lemmer").then((res) => {
-          resolve(processFile(res, "spark"));
+      case 'textCoding':
+
+        //two lemmer jobs + 1 spark job. To be added copy & zip services 
+        var params = { files: { inputFile: options.files.trainData }, textColumn: 0, folder: options.tempFolder };
+        params.files.codeFrame = options.files.codeFrame;
+
+        console.log("P1:" + JSON.stringify(params.files));
+        processFile(params, "lemmer").then((res) => {
+          console.log("res1:" + JSON.stringify(res));
+          params.files.trainData = res;
+          params.files.inputFile = options.files.testData;
+          params.textColumn = 1;
+          console.log("P2:" + JSON.stringify(params.files));
+          return processFile(params, "lemmer");
+        }).then((res) => {
+          console.log("res2:" + JSON.stringify(res));
+
+          params.files.testData = res;
+          params.folder = options.outputFolder;
+          console.log("P3:" + JSON.stringify(params.files));
+          resolve(processFile(params, "spark"));
+        }).then((res) => {
+          console.log("res3:" + JSON.stringify(res));
+
         }).catch((err) => { reject(err); });
         break;
+
       default:
         reject("Job type - " + options.jobType + " is not supported.");
     }
@@ -51,7 +73,7 @@ function processJob(options) {
 function processFile(data, queque) {
 
   return new Promise((resolve, reject) => {
-    console.log('Starting job in queue:' + queque + ', for file: ' + data.file);
+    console.log('Starting job in queue:' + queque + ', Inputs: ' + JSON.stringify(data.files));
 
     const thatQueue = new Queue(queque, { removeOnSuccess: true });
 
