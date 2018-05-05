@@ -13,4 +13,5 @@ server-sni.js
 /spark-jobserver/**
 /spark/**
 /swig/**
+/JamSpell/**
 /server/Language/**

@@ -4,13 +4,32 @@ var express = require('express');
 var router = express.Router();
 var VerifyToken = require('./verifyToken.js');
 var multer = require('multer');
-var fileSystem = require('fs'),
-    path = require('path'),
-    myMkdirSync = require('./utilities.js');
+var multerS3 = require('multer-s3');
+var path = require('path');
+var aws = require('aws-sdk');
+var S3FS = require('s3fs');
+var fileSystem = new S3FS(config.s3.bucket, config.s3.options);
+
+var s3 = new aws.S3(config.s3.options);
+
+var uploadFile = multer({
+    storage: multerS3({
+        s3: s3,
+        bucket: config.s3.bucket,
+        metadata: function(req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function(req, file, cb) {
+            if (req.saveToFolder) { cb(null, path.join(req.saveToFolder, file.originalname)); }
+            else {
+                cb(null, file.originalname);
+            }
+        }
+    })
+}).single('userData');
 
 
-
-
+/*
 var storage = multer.diskStorage({
     destination: function(req, file, callback) {
         if (req.saveToFolder) { callback(null, req.saveToFolder); }
@@ -22,9 +41,9 @@ var storage = multer.diskStorage({
         callback(null, file.originalname);
     }
 });
+*/
 
-
-var uploadFile = multer({ storage: storage }).single('userData');
+//var uploadFile = multer({ storage: storage }).single('userData');
 
 
 router.post('/upload/:id', VerifyToken, function(req, res) {
@@ -35,10 +54,6 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
         if (!item) return res.status(404).send("No item found.");
 
         req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'Inputs');
-        console.log("Saved folder");
-        try { fileSystem.statSync(req.saveToFolder); }
-        catch (err) { myMkdirSync(req.saveToFolder); }
-
 
         uploadFile(req, res, function(err) {
             if (err) {
@@ -81,10 +96,9 @@ router.get('/:id/download/:file', VerifyToken, async function(req, res) {
     if (!project) return res.status(400).send('Project not found, id: ' + req.body.id);
 
     var filePath = path.join(config.storagePath, project._id.toString(), 'Outputs', path.basename(req.params.file));
-    if (!fileSystem.existsSync(filePath)) return res.status(400).send('File not found, name: ' + req.params.file);
 
-
-    var stat = fileSystem.statSync(filePath);
+    var stat = await fileSystem.stat(filePath);
+    if (!stat) return res.status(400).send('File not found, name: ' + req.params.file);
 
     res.writeHead(200, {
         'Content-Type': 'audio/mpeg',

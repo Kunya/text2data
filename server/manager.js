@@ -1,9 +1,5 @@
-//const catchify = require('catchify');
 const Queue = require('bee-queue');
-const myMkdirSync = require('./utilities.js');
-const fileSystem = require('fs');
-
-
+var path = require("path");
 
 //https://github.com/bee-queue/bee-queue/issues/83
 //handle redis connection errors
@@ -12,11 +8,10 @@ const fileSystem = require('fs');
 function processJob(options) {
 
   //Prepare folder. Code is not safe, huh?
-  try { fileSystem.statSync(options.outputFolder); }
-  catch (err) { myMkdirSync(options.outputFolder); }
-  try { fileSystem.statSync(options.tempFolder); }
-  catch (err) { myMkdirSync(options.tempFolder); }
-
+  //try { fileSystem.statSync(options.outputFolder); }
+  //catch (err) { myMkdirSync(options.outputFolder); }
+  //try { fileSystem.statSync(options.tempFolder); }
+  //catch (err) { myMkdirSync(options.tempFolder); }
 
   return new Promise((resolve, reject) => {
     console.log('Manager: Starting job type:' + options.jobType);
@@ -27,7 +22,8 @@ function processJob(options) {
       case 'textCoding':
 
         //two lemmer jobs + 1 spark job. To be added copy & zip services 
-        var params = { files: { inputFile: options.files.trainData }, textColumn: 0, folder: options.tempFolder };
+        var params = { files: { inputFile: options.files.trainData }, textColumn: 0 };
+        params.folder = path.join(options.tempFolder, "lemmer");
         params.files.codeFrame = options.files.codeFrame;
 
         console.log("P1:" + JSON.stringify(params.files));
@@ -42,33 +38,37 @@ function processJob(options) {
           console.log("res2:" + JSON.stringify(res));
 
           params.files.testData = res;
-          params.folder = options.outputFolder;
+          params.folder = path.join(options.tempFolder, "spark");
           console.log("P3:" + JSON.stringify(params.files));
-          resolve(processFile(params, "spark"));
+          return processFile(params, "spark");
         }).then((res) => {
           console.log("res3:" + JSON.stringify(res));
 
-        }).catch((err) => { reject(err); });
+          params.zip = { files: res };
+          params.zip.folder = options.outputFolder;
+          params.zip.outputName = "coded_" + path.basename(options.files.testData) + ".zip";
+          console.log("P4:" + JSON.stringify(params.files));
+          return processFile(params, "zip");
+        }).then((res) => {
+          console.log("res4:" + JSON.stringify(res));
+          resolve(res);
+        }).catch((err) => {
+          console.log("Job failed: " + err);
+          reject(err);
+        });
         break;
 
       default:
         reject("Job type - " + options.jobType + " is not supported.");
     }
+    
+    //spark/coded/part-r-00000-11c51b15-ec5c-4505-b756-ba2b71dd5405.csv
+    
+    
 
   });
 }
 
-/*async function clusterText(file) {
-
-  const lemmerFile = await processFile(file, "lemmer");
-  if (!lemmerFile) return console.log("Error with lemmer");
-  const sparkFile = await processFile(lemmerFile, "spark");
-  if (!sparkFile) return console.log("Error with spark");
-  console.log('Lemmer cool: ' + lemmerFile);
-  console.log('Spark cool: ' + sparkFile);
-
-}
-*/
 
 function processFile(data, queque) {
 

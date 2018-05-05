@@ -2,6 +2,9 @@ var MyStem = require('mystem3');
 var Promise = require("bluebird");
 const Queue = require('bee-queue');
 const path = require('path');
+var config = require('./config.json');
+var S3FS = require('s3fs');
+var fs = new S3FS(config.s3.bucket, config.s3.options);
 
 const lemmerQueue = new Queue('lemmer', { removeOnSuccess: true });
 
@@ -17,7 +20,6 @@ lemmerQueue.process(function(job, done) {
     if (job.data.textColumn) textCol = job.data.textColumn;
     console.log("Text Column=" + textCol);
 
-    var fs = require('fs');
     var lines = [];
     var searchterms = [];
     var columns = [];

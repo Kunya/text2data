@@ -1,18 +1,18 @@
-var http = require('http'),
-  express = require('express'),
+var express = require('express'),
   bodyParser = require('body-parser'),
   cookieParser = require('cookie-parser'),
   errorhandler = require('errorhandler'),
   mongoose = require('mongoose');
-
 var config = require('./server/config.json');
-var isProduction = false; //process.env.NODE_ENV === 'production';
+//var createServer = require("auto-sni");
 
+var isProduction = false; //process.env.NODE_ENV === 'production';
 var app = express();
 
-//uncomment in prov - 
-//var helmet = require('helmet');
-//app.use(helmet());
+
+//uncomment in PROD
+var helmet = require('helmet');
+app.use(helmet());
 
 
 app.disable('x-powered-by');
@@ -28,7 +28,7 @@ if (isProduction) {
 }
 else {
   var config = require('./server/config.json');
-  mongoose.connect(config.dataBase.connectionString, { useMongoClient: true });
+  mongoose.connect(config.dataBase.connectionString);
 }
 
 app.get('/api/help', function(req, res) {
@@ -44,6 +44,7 @@ var jobAPI = require('./server/jobControl.js');
 app.use('/api/user', userAPI);
 app.use('/api/project', projectAPI);
 app.use('/api/job', jobAPI);
+
 
 
 

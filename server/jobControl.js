@@ -7,21 +7,6 @@ var jobManager = require('./manager.js');
 var Project = require('./projectModel.js').Project;
 var path = require("path");
 
-var Pusher = require('pusher');
-
-var pusher = new Pusher({
-    appId: config.pusher.appId,
-    key: config.pusher.key,
-    secret: config.pusher.secret,
-    cluster: 'eu',
-    encrypted: true
-});
-
-/*pusher.trigger('my-channel', 'my-event', {
-  "message": "hello world"
-});
-*/
-
 function jobTypeIndex(jobType) {
     var jobIndex = -1;
 
@@ -73,13 +58,11 @@ router.post('/create', VerifyToken, async function(req, res) {
     Object.entries(req.body.options).forEach(([key, value]) => {
         options.files[key] = path.join(config.storagePath, project._id.toString(), 'Inputs', value);
     });
-
-    options.tempFolder = path.join(config.storagePath, project._id.toString(), 'Temp');
+    options.job = newJob._id.toString();
+    options.tempFolder = path.join(config.storagePath, project._id.toString(), 'Temp', options.job);
     options.outputFolder = path.join(config.storagePath, project._id.toString(), 'Outputs');
     options.jobType = req.body.jobType;
     options.project = project._id.toString();
-    options.job=newJob._id;
-    console.log(options.file);
     //var jobInQueue = jobQueue.createJob({ file: fileName });
 
     jobManager.processJob(options).then((result) => {

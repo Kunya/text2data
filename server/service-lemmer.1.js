@@ -10,7 +10,7 @@ myStem.start(); // Run mystem in separate process
 var job = { id: "whoa", data: {} };
 job.reportProgress = function(x) { console.log(100 * x); };
 job.data.folder = '/home/ubuntu/workspace/';
-job.data.file = '/home/ubuntu/workspace/test_2lem.txt';
+job.data.file = '/home/ubuntu/workspace/tolem.txt';
 whoa(job, function(x) {
     console.log(x);
     process.exit(101);
@@ -44,7 +44,7 @@ function whoa(job, done) {
             }).then(function() {
                 columns[0] = searchterms.join(" ");
                 lines[lInd] = columns.join('\t');
-                if (lInd % 20 === 0) job.reportProgress((lInd / linesCount).toFixed(0));
+                //if (lInd % 20 === 0) job.reportProgress((lInd / linesCount).toFixed(0));
             }, function(err) { done(err); }).catch(console.error);
 
             return [];
