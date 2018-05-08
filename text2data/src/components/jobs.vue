@@ -87,10 +87,14 @@
                 fileIndex: -1,
                 fileSelections: [],
                 error: "",
+                socket: {},
             };
         },
         mounted: function() {
             this.fetchJobList().then((res) => {});
+        },
+        beforeDestroy: function() {
+            if (this.socket) this.socket.emit('end');
         },
         computed: {
             ...mapGetters([
@@ -124,6 +128,19 @@
                 params.jobType = this.metaData.jobTypes[this.jobType].type;
                 console.log(params);
                 this.addNewJobAPI(params).then((res) => {
+                    this.socket = this.$socketIO.connect();
+
+                    this.socket.on('connect', function() {
+                        // Connected, let's sign-up for to receive messages for this room
+                        console.log('Connected by Socket');
+                        this.socket.emit('job', res.jobId);
+                    });
+
+                    this.socket.on('status', function(data) {
+                        console.log('Job status:', data);
+                    });
+
+
 
                 });
             },

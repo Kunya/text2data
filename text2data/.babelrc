@@ -1,5 +1,7 @@
-{ "presets": [
-    ["env", { "modules": false }],
-    ["stage-2"]
-  ]
+{
+  "presets": [
+    [ "env", { "uglify": true } ],
+    "stage-1" // Or other presets not included with 'env' preset.
+  ],
+  "plugins": ["transform-runtime"]
 }
