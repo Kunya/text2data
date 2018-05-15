@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "archiver": "*",
-    "auto-sni": "^2.3.2",
     "aws-sdk": "^2.233.1",
     "babel": "*",
     "bcrypt": "^2.0.1",
@@ -21,6 +20,7 @@
     "cookie-parser": "*",
     "errorhandler": "*",
     "express": "^4.16.3",
+    "greenlock-express": "^2.1.4",
     "helmet": "^3.12.0",
     "jsonwebtoken": "^8.2.1",
     "mongoose": "^5.0.17",

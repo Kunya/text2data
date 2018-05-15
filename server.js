@@ -4,11 +4,15 @@ var express = require('express'),
   errorhandler = require('errorhandler'),
   mongoose = require('mongoose');
 var config = require('./server/config.json');
-//var createServer = require("auto-sni");
+var path = require('path');
+var fs = require('fs');
 
 var isProduction = false; //process.env.NODE_ENV === 'production';
 var app = express();
-
+app.use(function(req, res, next) {
+  console.log('%s %s %s', req.method, req.url, req.path);
+  next();
+});
 
 //uncomment in PROD
 var helmet = require('helmet');
@@ -41,24 +45,33 @@ var userAPI = require('./server/userController.js');
 var projectAPI = require('./server/projectCtrl.js');
 var jobAPI = require('./server/jobControl.js');
 
+app.use('/api/job', jobAPI.router);
 app.use('/api/user', userAPI);
 app.use('/api/project', projectAPI);
-app.use('/api/job', jobAPI);
 
 
 
 
-app.use(express.static(__dirname + '/text2data/dist'));
+app.use(express.static(__dirname + '/text2data/dist', { index: 'index.html' }));
 
 if (!isProduction) {
   app.use(errorhandler());
 }
 
 
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+
+  var fs = require('fs');
+  var file = path.join(__dirname, '/text2data/dist', req.path);
+  console.log(file);
+
+  if (fs.existsSync(file)) {
+    console.log("File exists");
+  }
+
+  console.log(JSON.stringify(req.originalUrl));
+  var err = new Error('Not Found:');
   err.status = 404;
   next(err);
 });
@@ -81,6 +94,7 @@ if (!isProduction) {
 }
 
 // production error handler
+
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
@@ -92,7 +106,27 @@ app.use(function(err, req, res, next) {
   });
 });
 
-// finally, let's start our server...
-var server = app.listen(process.env.PORT || 3000, function() {
-  console.log('Listening on port ' + server.address().port);
+
+var http = require('http');
+http.createServer(app).listen(80, function() {
+  console.log('Express HTTP server listening on port ' + 80);
+});
+
+var https = require('https');
+var httpsOptions = {
+  key: fs.readFileSync(path.resolve(path.join('/root/.getssl/text2data.space', 'text2data.space.key'))),
+  cert: fs.readFileSync(path.resolve(path.join('/root/.getssl/text2data.space', 'text2data.space.crt')))
+};
+
+var server = https.createServer(httpsOptions, app).listen(443, function() {
+  console.log('Express HTTPS server listening on 443 ' + app.address);
+});
+
+jobAPI.io = require('socket.io').listen(server);
+jobAPI.io.sockets.on('connection', function(socket) {
+  // once a client has connected, we expect to get a ping from them saying what they want to track
+  socket.on('job', function(job) {
+    console.log("Client connected to track job:" + job);
+    socket.join(job);
+  });
 });

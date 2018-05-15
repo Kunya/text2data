@@ -1,17 +1,9 @@
 const Queue = require('bee-queue');
 var path = require("path");
-
-//https://github.com/bee-queue/bee-queue/issues/83
-//handle redis connection errors
+var config = require("./config.json");
 
 
 function processJob(options) {
-
-  //Prepare folder. Code is not safe, huh?
-  //try { fileSystem.statSync(options.outputFolder); }
-  //catch (err) { myMkdirSync(options.outputFolder); }
-  //try { fileSystem.statSync(options.tempFolder); }
-  //catch (err) { myMkdirSync(options.tempFolder); }
 
   return new Promise((resolve, reject) => {
     console.log('Manager: Starting job type:' + options.jobType);
@@ -61,10 +53,10 @@ function processJob(options) {
       default:
         reject("Job type - " + options.jobType + " is not supported.");
     }
-    
+
     //spark/coded/part-r-00000-11c51b15-ec5c-4505-b756-ba2b71dd5405.csv
-    
-    
+
+
 
   });
 }
@@ -75,7 +67,7 @@ function processFile(data, queque) {
   return new Promise((resolve, reject) => {
     console.log('Starting job in queue:' + queque + ', Inputs: ' + JSON.stringify(data.files));
 
-    const thatQueue = new Queue(queque, { removeOnSuccess: true });
+    const thatQueue = new Queue(queque, { redis: config.redis, removeOnSuccess: true });
 
     const job = thatQueue.createJob(data);
     job.on('failed', (err) => { reject(err); });

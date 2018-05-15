@@ -6,7 +6,7 @@ import { router } from "../main.js"
 Vue.use(Vuex);
 Vue.use(VueResource);
 
-Vue.http.options.root = "https://text2data-kunya.c9users.io";
+Vue.http.options.root = "188.166.44.187";
 
 export const store = new Vuex.Store({
   state: {
@@ -57,10 +57,6 @@ export const store = new Vuex.Store({
       return Vue.http.post("/api/user/login", { email: payload.email, password: payload.password })
         .then((response) => {
           commit("setUserData", response.body);
-          if (!navigator.cookieEnabled) {
-            Vue.http.headers.common['Authorization'] = "Bearer " + this.user.token;
-          }
-
         });
     },
     addProjectAPI: function(context, item) {
@@ -181,7 +177,8 @@ export const store = new Vuex.Store({
     setUserList: function(state, list) { state.users = list; },
     setUserData: function(state, user) {
       state.user.email = user.email;
-      if (navigator.cookieEnabled) { /*enabled*/ }
+      //state.user.token = user.token;
+      if (navigator.cookieEnabled) { Vue.http.headers.common['x-access-token'] = user.token; }
       else { state.user.token = user.token; }
     }
 

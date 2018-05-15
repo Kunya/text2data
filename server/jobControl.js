@@ -7,18 +7,6 @@ var jobManager = require('./manager.js');
 var Project = require('./projectModel.js').Project;
 var path = require("path");
 
-//Socket stuff to send realtime update on job status
-var server = require('http').createServer(express);
-var io = require('socket.io')(server);
-
-io.sockets.on('connection', function(socket) {
-    // once a client has connected, we expect to get a ping from them saying what they want to track
-    socket.on('job', function(job) {
-        console.log("Client connected to track job:" + job);
-        socket.join(job);
-    });
-});
-server.listen(3000);
 
 
 function jobTypeIndex(jobType) {
@@ -79,11 +67,11 @@ router.post('/create', VerifyToken, async function(req, res) {
     options.project = project._id.toString();
     //var jobInQueue = jobQueue.createJob({ file: fileName });
 
-    io.sockets.in(options.job).emit('status', 'Placing job to queue');
+    //module.io.sockets.in(options.job).emit('status', 'Placing job to queue');
 
     jobManager.processJob(options).then((result) => {
         console.log("Job is completed!");
-        io.sockets.in(options.job).emit('Job is completed!');
+        //  module.io.sockets.in(options.job).emit('Job is completed!');
         newJob.status = 'Completed';
         newJob.save();
 
@@ -144,4 +132,7 @@ router.delete('/delete/:id', VerifyToken, function(req, res) {
 });
 
 
-module.exports = router;
+module.exports = {
+    io: {},
+    router: router
+};

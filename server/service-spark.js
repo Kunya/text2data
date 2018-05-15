@@ -1,7 +1,7 @@
 const Queue = require('bee-queue');
-const sparkQueue = new Queue('spark', { removeOnSuccess: true });
-const { exec } = require('child_process');
 var config = require('./config.json');
+const sparkQueue = new Queue('spark', { redis: config.redis, removeOnSuccess: true });
+const { exec } = require('child_process');
 var path = require('path');
 var S3FS = require('s3fs');
 var fs = new S3FS(config.s3.bucket, config.s3.options);
@@ -25,13 +25,13 @@ sparkQueue.process(function(job, done) {
     exec(execScript, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
-            return done(error);
+            return done("Error executing Spark script."); //error);
         }
 
         fs.writeFile(files[0], stdout, function(err) {
             if (err) {
                 console.log(err);
-                return done(err);
+                return done("Error logging Spark output."); //err);
             }
             console.log("stdout is written to " + path.basename(files[0]));
         });
@@ -40,7 +40,7 @@ sparkQueue.process(function(job, done) {
         fs.readdir(path.join(job.data.folder, 'coded'), function(err, found) {
             if (err) {
                 console.log(err);
-                return done(err);
+                return done("Error reading Spark output."); //err);
             }
             console.log("Spark job is finished.");
             found.filter(x => x.indexOf("csv") > 0).forEach(z => files.push(path.join(job.data.folder, 'coded', z)));

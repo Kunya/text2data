@@ -16,3 +16,7 @@ server-sni.js
 JamSpell
 /JamSpell/**
 /server/Language/**
+/getssl
+getssl
+/getssl/**
+/.well-known/**

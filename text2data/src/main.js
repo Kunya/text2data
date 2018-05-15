@@ -3,12 +3,12 @@ import VueRouter from 'vue-router';
 import App from './App.vue';
 import { routes } from './routes.js';
 import { store } from './store/Store.js';
-import { socketIO } from 'socket.io';
+import { socketIO } from 'socket.io-client';
 
 
 Vue.config.devtools = true;
 Vue.use(VueRouter);
-Object.definePrototype(Vue.prototype, '$socketIO', { value: socketIO });
+Vue.prototype.$socketIO = socketIO;
 
 const router = new VueRouter({ routes: routes });
 
