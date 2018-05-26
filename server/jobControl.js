@@ -53,9 +53,9 @@ router.post('/create', VerifyToken, async function(req, res) {
     });
 
     if (!newJob) return res.status(400).send("Failed to save new job to database");
-    res.status(200).send({ status: "Created", jobId: newJob._id });
+    res.status(200).send(newJob.toObject());
 
-    console.log('Job created');
+    //console.log('Job created' + JSON.stringify(newJob.toObject()));
     var options = { files: {} };
     Object.entries(req.body.options).forEach(([key, value]) => {
         options.files[key] = path.join(config.storagePath, project._id.toString(), 'Inputs', value);
@@ -67,11 +67,11 @@ router.post('/create', VerifyToken, async function(req, res) {
     options.project = project._id.toString();
     //var jobInQueue = jobQueue.createJob({ file: fileName });
 
-    //module.io.sockets.in(options.job).emit('status', 'Placing job to queue');
+    console.log("Emit job status to: " + options.job);
+    module.exports.io.to(options.job).emit('status', { job: options.job, status: 'Adding job to queue' });
 
-    jobManager.processJob(options).then((result) => {
+    jobManager.processJob(options, module.exports.io).then((result) => {
         console.log("Job is completed!");
-        //  module.io.sockets.in(options.job).emit('Job is completed!');
         newJob.status = 'Completed';
         newJob.save();
 
@@ -80,12 +80,17 @@ router.post('/create', VerifyToken, async function(req, res) {
         });
         project.markModified('outputs');
         project.save();
-
+        console.log("Emit Job status to " + options.job);
+        module.exports.io.to(options.job).emit('status', { job: options.job, status: 'Completed' });
 
     }).catch((err) => {
         newJob.status = 'Failed:' + err;
         newJob.save();
 
+    }).then(() => { //Clean socket room as no more updates expected
+        // module.exports.io.clients(function(rooms, s) {
+        //    console.log(rooms); //s.leave(options.job);
+        //    });
     });
 
 

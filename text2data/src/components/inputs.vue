@@ -52,6 +52,7 @@
       <option value="trainData">Train Data</option>
       <option value="codeFrame">Codeframe</option>
      </select>
+     <a @click='deleteFile(selectedFile)' class="button is-warning">Delete File</a>
      </div>
     </div>
   </div>
@@ -114,11 +115,16 @@
 
         },
         methods: {
+            ...mapActions(['deleteInputFile']),
             ...mapMutations(['addInputFile']),
             isSelected: function(index) {
                 return {
                     'has-text-weight-bold': (this.selectedFile === index)
                 };
+            },
+
+            deleteFile(selectedFile) {
+
             },
 
             fileChange(fileList) {

@@ -6,9 +6,10 @@
     <div class="select">
      <select v-model="jobType">
       <option value="-1" selected disabled hidden>Please select job type</option>
-      <option v-for="(job,index) in metaData.jobTypes" :value="index">{{job.label}}</option>
+      <option v-for="(job,index) in metaData.jobTypes" :value="index" v-bind:key="job._id">{{job.label}}</option>
       </select>
-    </div>
+    </div>               
+
     
     <div v-if="jobType>=0">
      <div class="box">
@@ -49,14 +50,14 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(item,index) in jobList" v-bind:class="isSelectedJob(index)">
+                <tr v-for="(item,index) in jobList" v-bind:key="item._id" v-bind:class="isSelectedJob(index)">
                     <td><a class="is-link" @click="selectJob(index)">
                   {{item.registered}}
                   </a>
                     </td>
                     <td>{{item.jobType}}</td>
-                    <td>{{item.details}}</td>
-                    <td>{{item.status}}</td>
+                    <td style="word-wrap: break-word; width: 230px;">{{item.details}}</td>
+                    <td><i v-show="false" class="fa fa-spinner fa-spin" aria-hidden="true"></i>{{item.status}}</td>
                 </tr>
             </tbody>
         </table>
@@ -71,7 +72,7 @@
     import { mapGetters } from 'vuex';
     import { mapActions } from 'vuex';
     import { mapMutations } from 'vuex';
-
+    import socketio from 'socket.io-client';
     // Add columns: column 2 - show selection.
     // Add execute button below.
     // Write execution with lemmer
@@ -87,11 +88,23 @@
                 fileIndex: -1,
                 fileSelections: [],
                 error: "",
-                socket: {},
+                isConnected: false,
+                socket: {}
             };
         },
-        mounted: function() {
-            this.fetchJobList().then((res) => {});
+        mounted() {
+            this.fetchJobList().then(() => {});
+            var vm = this;
+            this.socket = socketio.connect();
+            this.socket.on('connect', () => {
+                vm.isConnected = true;
+                //console.log("Connected via Socket to server");
+            });
+            this.socket.on('disconnect', () => {
+                vm.isConnected = false;
+                //console.log("Disconnected from server Socket");
+            });
+
         },
         beforeDestroy: function() {
             if (this.socket) this.socket.emit('end');
@@ -103,14 +116,32 @@
                 'activeProject'
             ])
         },
-        methods: {
+        watch: {
+            // эта функция запускается при любом изменении вопроса
+            jobType: function(newType, oldType) {
+                this.tabIndex = 0;
+            } //,
+            //isConnected: function(newType, oldType) {
+            //    console.log("isConnected now " + newType + ", was" + oldType);
+            //    }
 
+        },
+        methods: {
+            ...mapMutations(['setJobStatus', 'addJob']),
             ...mapActions(['fetchJobList', 'addNewJobAPI']),
-            addNewJob: function() {
+
+            checkJobStatus(jobIndex) {
+                var jobStatus = this.jobList[jobIndex].status;
+                if (!jobStatus) return false;
+                if (jobStatus === "Completed") return false;
+                if (jobStatus.slice(0, 6) === "Failed") return false;
+                return true;
+            },
+
+            addNewJob() {
                 var params = { options: {} };
                 var emptyTabs = "";
                 if (this.fileIndex > -1) this.fileSelections[this.tabIndex] = this.fileIndex; //save current selection
-
 
                 //check if user provided all inputs and prepare request to server
                 this.metaData.jobTypes[this.jobType].inputs.forEach((x, i) => {
@@ -126,23 +157,24 @@
 
                 params.projectId = this.activeProject._id;
                 params.jobType = this.metaData.jobTypes[this.jobType].type;
-                console.log(params);
-                this.addNewJobAPI(params).then((res) => {
-                    this.socket = this.$socketIO.connect();
+                //console.log(params);
+                var vm = this;
+                vm.addNewJobAPI(params).then(function(res) {
+                    // Connected, let's sign-up for to receive messages for this room
+                    //console.log("Client is connected = " + vm.isConnected);
+                    //console.log("JOB = " + res);
 
-                    this.socket.on('connect', function() {
-                        // Connected, let's sign-up for to receive messages for this room
-                        console.log('Connected by Socket');
-                        this.socket.emit('job', res.jobId);
-                    });
-
-                    this.socket.on('status', function(data) {
-                        console.log('Job status:', data);
-                    });
-
-
+                    if (vm.isConnected) {
+                        //console.log('emited job:' + res._id);
+                        vm.socket.emit('job', res._id);
+                        vm.socket.on('status', function(data) {
+                            //console.log('Incoming message:', data);
+                            vm.setJobStatus(data);
+                        });
+                    }
 
                 });
+
             },
             selectFile: function(index) {
                 this.fileIndex = index;

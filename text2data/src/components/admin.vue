@@ -72,78 +72,82 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { mapActions } from 'vuex';
-import { mapMutations } from 'vuex';
+ import { mapGetters } from 'vuex';
+ import { mapActions } from 'vuex';
+ import { mapMutations } from 'vuex';
 
-// Define access level: Admin, Domain (company), Client, project
+ // Define access level: Admin, Domain (company), Client, project
 
-export default{
-    data: function() {
-        return {
-            user:{email:"", password:"", role:"", accessTo:[], tags:[]},
-            access:"",
-            message:"",
-            selectedUser:-1,
-            error:"",
-            formIsVisible:false,
-            isNewUser:false,
-            roles:["Admin", "Domain", "Client", "Project"]
-           };
-    },
-    computed:{
-        ...mapGetters([
-            'userList'
-            ]),
-            isSelected:function(index){
-             return {
-                      'is-prime': (this.selectedUser===index)
-                    };
-            },
-        },
-    methods:{
-        ...mapMutations(['setActiveProjectById']),
-        ...mapActions([
-            'fetchUserList',
-            'addUserAPI',
-            'updateUserAPI']),
-        
-        selectUser:function(index){
-         this.user=this.userList[index];
-          this.formIsVisible=true;
-          this.isNewUser=false;
-          this.selectedUser=index;
-        },  
-        showForm:function(){
-         this.user={email:"", password:"", role:"", accessTo:[], tags:[]};
-         this.error="";
-         this.message="";
-         this.formIsVisible=true;
-         this.isNewUser=true;
-        },
-        Submit:function(){
-         if (this.isNewUser) {this.addNewUser()} else {}
-        },
-        addNewUser:function() {
-            if (this.user.email) {
-             this.user.accessTo=this.access.split(';');
-             this.addUserAPI(this.user).then((response) => {
-             this.user.email="";
-             this.user.password="";
-             this.error="";
-             this.message="User was successfuly added!";
-            }).catch((error => {
-                console.log(error);
-                this.error=error;
-               }));
-            }
-        }     
-    },    
-    mounted: function(){
-       this.fetchUserList();
+ export default {
+  data: function() {
+   return {
+    user: { email: "", password: "", role: "", accessTo: [], tags: [] },
+    access: "",
+    message: "",
+    selectedUser: -1,
+    error: "",
+    formIsVisible: false,
+    isNewUser: false,
+    roles: ["Admin", "Domain", "Client", "Project"]
+   };
+  },
+  computed: {
+   ...mapGetters([
+    'userList'
+   ]),
+  },
+  methods: {
+   ...mapMutations(['setActiveProjectById']),
+   ...mapActions([
+    'fetchUserList',
+    'addUserAPI',
+    'updateUserAPI'
+   ]),
+
+   selectUser: function(index) {
+    this.user = this.userList[index];
+    this.formIsVisible = true;
+    this.isNewUser = false;
+    this.selectedUser = index;
+   },
+
+   isSelected: function(index) {
+    return {
+     'is-prime': (this.selectedUser === index)
+    };
+   },
+
+   showForm: function() {
+    this.user = { email: "", password: "", role: "", accessTo: [], tags: [] };
+    this.error = "";
+    this.message = "";
+    this.formIsVisible = true;
+    this.isNewUser = true;
+   },
+   Submit: function() {
+    if (this.isNewUser) { this.addNewUser(); }
+    else {}
+   },
+   addNewUser: function() {
+    if (this.user.email) {
+     this.user.accessTo = this.access.split(';');
+     this.addUserAPI(this.user).then((response) => {
+      this.user.email = "";
+      this.user.password = "";
+      this.error = "";
+      this.message = "User was successfuly added!";
+     }).catch((error => {
+      console.log(error);
+      this.error = error;
+     }));
     }
-    
-};
+   }
+  },
+  mounted: function() {
+   this.fetchUserList();
+  }
+
+ };
 </script>
 
 <style>

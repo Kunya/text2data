@@ -109,8 +109,9 @@ app.use(function(err, req, res, next) {
 
 var http = require('http');
 http.createServer(app).listen(80, function() {
-  console.log('Express HTTP server listening on port ' + 80);
+  console.log('Express HTTP server listening');
 });
+
 
 var https = require('https');
 var httpsOptions = {
@@ -118,15 +119,19 @@ var httpsOptions = {
   cert: fs.readFileSync(path.resolve(path.join('/root/.getssl/text2data.space', 'text2data.space.crt')))
 };
 
-var server = https.createServer(httpsOptions, app).listen(443, function() {
-  console.log('Express HTTPS server listening on 443 ' + app.address);
-});
-
-jobAPI.io = require('socket.io').listen(server);
+var server = https.createServer(httpsOptions, app);
+/*jobAPI.io = require('socket.io').listen(server);
 jobAPI.io.sockets.on('connection', function(socket) {
   // once a client has connected, we expect to get a ping from them saying what they want to track
+  console.log("Socket connection");
+
   socket.on('job', function(job) {
     console.log("Client connected to track job:" + job);
     socket.join(job);
   });
+});
+*/
+
+server.listen(443, function() {
+  console.log('Express HTTPS server listening' + app.address);
 });

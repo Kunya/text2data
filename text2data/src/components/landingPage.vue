@@ -7,7 +7,7 @@
   <div class="level"></div>
   <div class="section columns">
    <div class="column is-half is-offset-one-quarter">
-    <form>
+    <form autocomplete="on">
      <div class="field">
       <label class="label has-text-left">Email</label>
       <div class="control">
@@ -56,7 +56,7 @@
    loginUser: function() {
     this.err = false;
     this.authUser({ email: this.login, password: this.password }).then((response) => {
-     console.log(response);
+     //console.log(response);
      this.$router.push("/user");
     }).catch((error => {
      if (error) this.err = true;
