@@ -1,32 +1,40 @@
 <template>
  <div>
   
-  <div class="columns">
-
-  <div class="column">      
+  
   <div class="box">
       <span class="has-text-weight-bold">Uploaded Files</span>
-      <br></br>
   <div>quick search</div>
   <input type="text" v-model="searchText">
-  <select v-model="searchTag">
+  <select v-if="0" v-model="searchTag">
     <option disabled value="">Select a Tag to filter</option>
     <option value="">All</option>
     <option value="testData">Data to process</option>
     <option value="trainData">Train Data</option>
     <option value="codeFrame">Codeframe</option>
   </select>
-   <hr>
-      <ul>
-          <li v-for="(item,index) in filteredList">
-              <a class="is-link" v-bind:class="isSelected(index)" @click="selectFile(index)">{{item.label}}</a>
-          </li>
-      </ul>
+        <table class="table is-narrow">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in filteredList">
+                    <td><a href="" class="is-link" download>{{item.label}}</a>
+                    </td>
+                    <td>{{item.uploaded}} {{item.owner}}</td>
+                    <td><a @click="deleteFile(index)" class="is-link" download>Delete</a></td>
+                </tr>
+            </tbody>
+        </table>
       <p class="help is-danger" v-show="!activeProject.inputs">No data uploaded yet</p>
 
-   <hr>
    <div class="file has-name">
     <label class="file-label">
+     <i class="fa fa-cloud-upload" aria-hidden="true"> </i>
      <input type="file" name="file" :disabled="stage==='uploading'" v-on:change="fileChange($event.target.files)" />
      
      
@@ -37,25 +45,7 @@
     <p class="help is-primary" v-show="stage==='uploading'">Uploading...</p>
     <p class="help is-primary" v-show="stage==='uploaded'">File was uploaded!</p>
    </div>
-  </div>
-  </div>
    
-  <div class="column">  
-    <div class="box">
-     <div v-if="selectedFile>=0">
-     <div><span class="has-text-weight-bold">Uploaded by:</span> {{activeProject.inputs[selectedFile].owner | friendlyNA}}</div>  
-     <div><span class="has-text-weight-bold">Uploaded at:</span> {{activeProject.inputs[selectedFile].uploaded | friendlyNA}}</div>  
-     <span class="has-text-weight-bold">Select File Tag</span>
-     <select v-model="activeProject.inputs[selectedFile].tag">
-      <option disabled value="">Select File Tag</option>
-      <option value="testData">Data to process</option>
-      <option value="trainData">Train Data</option>
-      <option value="codeFrame">Codeframe</option>
-     </select>
-     <a @click='deleteFile(selectedFile)' class="button is-warning">Delete File</a>
-     </div>
-    </div>
-  </div>
   </div>
    
   
@@ -115,7 +105,7 @@
 
         },
         methods: {
-            ...mapActions(['deleteInputFile']),
+            ...mapActions(['deleteInputFileAPI']),
             ...mapMutations(['addInputFile']),
             isSelected: function(index) {
                 return {
@@ -123,8 +113,8 @@
                 };
             },
 
-            deleteFile(selectedFile) {
-
+            deleteFile(index) {
+                this.deleteInputFileAPI(index);
             },
 
             fileChange(fileList) {

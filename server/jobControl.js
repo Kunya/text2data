@@ -76,7 +76,9 @@ router.post('/create', VerifyToken, async function(req, res) {
         newJob.save();
 
         project.outputs.push({
-            label: path.basename(result)
+            label: path.basename(result),
+            owner: req.userId,
+            created: new Date()
         });
         project.markModified('outputs');
         project.save();

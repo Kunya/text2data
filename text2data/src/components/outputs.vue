@@ -8,11 +8,23 @@
    </div>
 
     <div class="section">
-      <ul>
-          <li v-for="(item,index) in activeProject.outputs">
-              <a :href="getLink(item.label)" class="is-link" download>{{item.label}}</a>
-          </li>
-      </ul>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in activeProject.outputs">
+                    <td><a :href="getLink(item.label)" class="is-link" download>{{item.label}}</a>
+                    </td>
+                    <td>{{item.uploaded}} {{item.owner}}</td>
+                    <td><a href="" class="is-link" download>Delete</a></td>
+                </tr>
+            </tbody>
+        </table>
       <p class="help is-danger" v-show="!activeProject.outputs">No data processed yet</p>
     </div>
    

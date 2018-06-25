@@ -69,10 +69,12 @@ export const store = new Vuex.Store({
         }));
 
     },
-    deleteInputFileAPI: function(context, item) { //UploadAPIis in inputs.vue no idea why?
-      return Vue.http.delete("/api/project/inputs", item)
+    deleteInputFileAPI: function(context, index) { //UploadAPIis in inputs.vue no idea why?
+      var fileName = context.state.activeProjectObj.inputs[index].label;
+      var apiCall = context.state.activeProjectObj._id + "/Inputs/" + fileName;
+      return Vue.http.delete("/api/project/" + apiCall)
         .then((response) => {
-          context.commit("deleteInputFile", item);
+          context.commit("deleteInputFile", index);
         })
         .catch((error => {
           console.log(error.statusText);
