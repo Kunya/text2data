@@ -1,12 +1,10 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from 'vue';
+import Vuex from 'vuex';
 import VueResource from 'vue-resource';
-import { router } from "../main.js"
+
 
 Vue.use(Vuex);
 Vue.use(VueResource);
-
-Vue.http.options.root = "188.166.44.187";
 
 export const store = new Vuex.Store({
   state: {

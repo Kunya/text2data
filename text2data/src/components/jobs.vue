@@ -70,7 +70,6 @@
 <script>
     import { mapGetters } from 'vuex';
     import { mapActions } from 'vuex';
-    import { mapMutations } from 'vuex';
 
     // Add columns: column 2 - show selection.
     // Add execute button below.
@@ -86,15 +85,19 @@
                 jobIndex: -1,
                 fileIndex: -1,
                 fileSelections: [],
-                error: "",
-                socket: {},
+                error: ""
             };
+        },
+        sockets: {
+            connect() {
+                console.log("Socket connected");
+            }
         },
         mounted: function() {
             this.fetchJobList().then((res) => {});
         },
         beforeDestroy: function() {
-            if (this.socket) this.socket.emit('end');
+            if (this.$options.socket) this.socket.emit('end');
         },
         computed: {
             ...mapGetters([
@@ -110,7 +113,6 @@
                 var params = { options: {} };
                 var emptyTabs = "";
                 if (this.fileIndex > -1) this.fileSelections[this.tabIndex] = this.fileIndex; //save current selection
-
 
                 //check if user provided all inputs and prepare request to server
                 this.metaData.jobTypes[this.jobType].inputs.forEach((x, i) => {
@@ -128,21 +130,13 @@
                 params.jobType = this.metaData.jobTypes[this.jobType].type;
                 console.log(params);
                 this.addNewJobAPI(params).then((res) => {
-                    this.socket = this.$socketIO.connect();
-
-                    this.socket.on('connect', function() {
-                        // Connected, let's sign-up for to receive messages for this room
-                        console.log('Connected by Socket');
-                        this.socket.emit('job', res.jobId);
-                    });
-
-                    this.socket.on('status', function(data) {
-                        console.log('Job status:', data);
-                    });
-
-
-
+                    //this.$socket.emit('job', res.jobId);
+                    //this.$socket.on('status', function(data) {
+                    //   console.log("Job status" + data);
+                    //    });
                 });
+
+
             },
             selectFile: function(index) {
                 this.fileIndex = index;
