@@ -55,6 +55,7 @@ export const store = new Vuex.Store({
       return Vue.http.post("/api/user/login", { email: payload.email, password: payload.password })
         .then((response) => {
           commit("setUserData", response.body);
+          //return "Login succeeded";
         });
     },
     addProjectAPI: function(context, item) {
@@ -68,6 +69,19 @@ export const store = new Vuex.Store({
         }));
 
     },
+    deleteInputFileAPI: function(context, index) { //UploadAPIis in inputs.vue no idea why?
+      var fileName = context.state.activeProjectObj.inputs[index].label;
+      var apiCall = context.state.activeProjectObj._id + "/Inputs/" + fileName;
+      return Vue.http.delete("/api/project/" + apiCall)
+        .then((response) => {
+          context.commit("deleteInputFile", index);
+        })
+        .catch((error => {
+          console.log(error.statusText);
+        }));
+
+    },
+
     updateProjectAPI: function(context, item) {
       return Vue.http.put("/api/project/update/" + item._id, item)
         .then((response) => {
@@ -129,8 +143,9 @@ export const store = new Vuex.Store({
     addNewJobAPI: function(context, item) {
       return Vue.http.post("/api/job/create", item)
         .then((response) => {
-          item._id = response.body._id;
-          //context.commit("addJob", item);
+          //item.jobId = response.body.jobId;
+          context.commit("addJob", response.body);
+          return response.body;
         })
         .catch((error => {
           console.log(error.statusText);
@@ -168,10 +183,20 @@ export const store = new Vuex.Store({
       state.activeUser = item;
     },
     addInputFile: function(state, item) { state.activeProjectObj.inputs.push(item); },
+    deleteInputFile: function(state, index) { state.activeProjectObj.inputs.splice(index, 1); },
     updateActiveProject: function(state, project) { state.activeProjectObj = project; },
     updateSelectedUser: function(state, item) { state.activeUser = item; },
     setProjectList: function(state, list) { state.projects = list; },
     setJobList: function(state, list) { state.jobs = list; },
+    addJob: function(state, item) { state.jobs.unshift(item); },
+    setJobStatus: function(state, data) {
+      for (var i in state.jobs) {
+        if (state.jobs[i]._id == data.job) {
+          state.jobs[i].status = data.status;
+        }
+      }
+
+    },
     setUserList: function(state, list) { state.users = list; },
     setUserData: function(state, user) {
       state.user.email = user.email;

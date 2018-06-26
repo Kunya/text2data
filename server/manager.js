@@ -3,12 +3,14 @@ var path = require("path");
 var config = require("./config.json");
 
 
-function processJob(options) {
+function processJob(options, io) {
 
   return new Promise((resolve, reject) => {
     console.log('Manager: Starting job type:' + options.jobType);
     switch (options.jobType) {
       case 'lemmer':
+        console.log("Emit on job", options.job);
+        io.to(options.job).emit({ job: options.job, status: 'Lemmer service' });
         resolve(processFile({ files: options.files, folder: options.outputFolder }, "lemmer"));
         break;
       case 'textCoding':
@@ -19,15 +21,20 @@ function processJob(options) {
         params.files.codeFrame = options.files.codeFrame;
 
         console.log("P1:" + JSON.stringify(params.files));
+        io.to(options.job).emit('status', { job: options.job, status: 'Lemmer service for trainData' });
+
         processFile(params, "lemmer").then((res) => {
           console.log("res1:" + JSON.stringify(res));
           params.files.trainData = res;
           params.files.inputFile = options.files.testData;
           params.textColumn = 1;
           console.log("P2:" + JSON.stringify(params.files));
+          io.to(options.job).emit('status', { job: options.job, status: 'Lemmer service for testData' });
+
           return processFile(params, "lemmer");
         }).then((res) => {
           console.log("res2:" + JSON.stringify(res));
+          io.to(options.job).emit({ job: options.job, status: 'Coding data' });
 
           params.files.testData = res;
           params.folder = path.join(options.tempFolder, "spark");
@@ -35,6 +42,7 @@ function processJob(options) {
           return processFile(params, "spark");
         }).then((res) => {
           console.log("res3:" + JSON.stringify(res));
+          io.to(options.job).emit({ job: options.job, status: 'Zip outputs' });
 
           params.zip = { files: res };
           params.zip.folder = options.outputFolder;
@@ -42,10 +50,12 @@ function processJob(options) {
           console.log("P4:" + JSON.stringify(params.files));
           return processFile(params, "zip");
         }).then((res) => {
+          //io.to(options.job).emit({ job: options.job, status: 'Completed');
           console.log("res4:" + JSON.stringify(res));
           resolve(res);
         }).catch((err) => {
           console.log("Job failed: " + err);
+          io.to(options.job).emit('status', { job: options.job, status: 'Job Failed' });
           reject(err);
         });
         break;

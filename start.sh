@@ -5,9 +5,9 @@ echo "Launching redis server"
 echo "Launching service: Lemmer"
 node ./server/service-lemmer.js >> ./Logs/srv-lemmer-log.txt &
 echo "Launching service: Spark"
-node ./server/service-spark.js >> ./Logs/srv-spark-log.txt &
-echo "Launching service: Zip/Unzip"
-node ./server/service-zip.js >> ./Logs/srv-zip-log.txt &
-echo "Please Launch HTTP server manually"
+#node ./server/service-spark.js >> ./Logs/srv-spark-log.txt &
+#echo "Launching service: Zip/Unzip"
+#node ./server/service-zip.js >> ./Logs/srv-zip-log.txt &
+#echo "Please Launch HTTP server manually"
 #node ./server.js
 

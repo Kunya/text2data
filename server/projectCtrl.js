@@ -53,7 +53,7 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
         if (err) return res.status(500).send("There was a problem finding item:" + req.params.id + ", " + err);
         if (!item) return res.status(404).send("No item found.");
 
-        req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'Inputs');
+        req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'inputs');
 
         uploadFile(req, res, function(err) {
             if (err) {
@@ -63,6 +63,8 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
 
             item.inputs.push({
                 label: req.file.originalname,
+                owner: req.userId,
+                created: new Date(),
                 //tag:String
             });
             item.markModified('inputs');
@@ -85,11 +87,63 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
 
 });
 
+//map UI to server API;
+//
 ///
-router.get('/:id/download/:file', VerifyToken, async function(req, res) {
+router.delete('/:id/:folder/:file', VerifyToken, async function(req, res) {
 
     if (!req.params.id) return res.status(400).send('Missing project id in request');
     if (!req.params.file) return res.status(400).send('Missing file in request');
+    if (!req.params.folder) return res.status(400).send('Missing folder in request');
+
+    if (["Outputs", "Inputs"].indexOf(req.params.folder) < 0) return res.status(400).send('Folder can be Outputs or Inputs, while get: ' + req.params.folder);
+
+
+    //check project id & get info
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(400).send('Project not found, id: ' + req.params.id);
+
+    try {
+        var filePath = path.join(config.storagePath, project._id.toString(), req.params.folder, path.basename(req.params.file));
+    }
+    catch (err) {
+        return res.status(400).send('Bad file name: ' + req.params.file);
+    }
+
+    fileSystem.stat(filePath, function(stats, err) {
+        if (err) return res.status(400).send('File not found, name: ' + req.params.file);
+
+        var subId;
+        console.log("Deleting file:" + req.params.file);
+        for (var i = 0; i < project.inputs.length; i++) {
+            if (project.inputs[i].label === req.params.file) { subId = project.inputs[i]._id; }
+        }
+
+        if (!subId) return res.status(400).send('File not found in DB, name: ' + req.params.file);
+
+        project.inputs.pull(subId);
+        console.log(project.inputs);
+        project.save(function(err) {
+            if (err) return res.status(500).send('Save is failed on data base side.');
+            res.status(200).send('Deleted');
+
+
+        });
+
+
+    });
+
+
+});
+
+///
+router.get('/:id/:folder/:file', VerifyToken, async function(req, res) {
+
+    if (!req.params.id) return res.status(400).send('Missing project id in request');
+    if (!req.params.file) return res.status(400).send('Missing file in request');
+    if (!req.params.folder) return res.status(400).send('Missing folder in request');
+
+
 
     //check project id & get info
     const project = await Project.findById(req.params.id);
