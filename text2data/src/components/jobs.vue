@@ -71,12 +71,8 @@
 <script>
     import { mapGetters } from 'vuex';
     import { mapActions } from 'vuex';
-<<<<<<< HEAD
-
-=======
     import { mapMutations } from 'vuex';
     import socketio from 'socket.io-client';
->>>>>>> socketioFix
     // Add columns: column 2 - show selection.
     // Add execute button below.
     // Write execution with lemmer
@@ -91,18 +87,6 @@
                 jobIndex: -1,
                 fileIndex: -1,
                 fileSelections: [],
-<<<<<<< HEAD
-                error: ""
-            };
-        },
-        sockets: {
-            connect() {
-                console.log("Socket connected");
-            }
-        },
-        mounted: function() {
-            this.fetchJobList().then((res) => {});
-=======
                 error: "",
                 isConnected: false,
                 socket: {}
@@ -111,7 +95,7 @@
         mounted() {
             this.fetchJobList().then(() => {});
             var vm = this;
-            this.socket = socketio.connect();
+            this.socket = socketio.connect({ secure: true });
             this.socket.on('connect', () => {
                 vm.isConnected = true;
                 //console.log("Connected via Socket to server");
@@ -121,7 +105,6 @@
                 //console.log("Disconnected from server Socket");
             });
 
->>>>>>> socketioFix
         },
         beforeDestroy: function() {
             if (this.$options.socket) this.socket.emit('end');
@@ -174,17 +157,6 @@
 
                 params.projectId = this.activeProject._id;
                 params.jobType = this.metaData.jobTypes[this.jobType].type;
-<<<<<<< HEAD
-                console.log(params);
-                this.addNewJobAPI(params).then((res) => {
-                    //this.$socket.emit('job', res.jobId);
-                    //this.$socket.on('status', function(data) {
-                    //   console.log("Job status" + data);
-                    //    });
-                });
-
-
-=======
                 //console.log(params);
                 var vm = this;
                 vm.addNewJobAPI(params).then(function(res) {
@@ -203,7 +175,6 @@
 
                 });
 
->>>>>>> socketioFix
             },
             selectFile: function(index) {
                 this.fileIndex = index;

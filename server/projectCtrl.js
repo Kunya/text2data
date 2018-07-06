@@ -25,7 +25,8 @@ var uploadFile = multer({
                 cb(null, file.originalname);
             }
         }
-    })
+    }),
+    limits: { fileSize: 30 * 1024 * 1024 }
 }).single('userData');
 
 
@@ -53,13 +54,21 @@ router.post('/upload/:id', VerifyToken, function(req, res) {
         if (err) return res.status(500).send("There was a problem finding item:" + req.params.id + ", " + err);
         if (!item) return res.status(404).send("No item found.");
 
-        req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'inputs');
+        req.saveToFolder = path.join(config.storagePath, item._id.toString(), 'Inputs');
 
         uploadFile(req, res, function(err) {
             if (err) {
                 return res.status(500).end("Error uploading file:" + err);
             }
-            //console.log("Uploaded file "+req.file.originalname);
+            console.log("Uploaded file " + req.file.originalname);
+            console.log("Folder " + req.saveToFolder);
+
+            fileSystem.readdir(req.saveToFolder, function(error, files) {
+                if (error) return new Error("Can't read folder:" + req.saveToFolder);
+
+                console.log(files);
+
+            });
 
             item.inputs.push({
                 label: req.file.originalname,
@@ -104,7 +113,7 @@ router.delete('/:id/:folder/:file', VerifyToken, async function(req, res) {
     if (!project) return res.status(400).send('Project not found, id: ' + req.params.id);
 
     try {
-        var filePath = path.join(config.storagePath, project._id.toString(), req.params.folder, path.basename(req.params.file));
+        var filePath = path.join(config.storagePath, project._id.toString(), req.params.folder.toLowerCase(), path.basename(req.params.file));
     }
     catch (err) {
         return res.status(400).send('Bad file name: ' + req.params.file);
@@ -122,7 +131,7 @@ router.delete('/:id/:folder/:file', VerifyToken, async function(req, res) {
         if (!subId) return res.status(400).send('File not found in DB, name: ' + req.params.file);
 
         project.inputs.pull(subId);
-        console.log(project.inputs);
+        //console.log(project.inputs);
         project.save(function(err) {
             if (err) return res.status(500).send('Save is failed on data base side.');
             res.status(200).send('Deleted');
