@@ -6,6 +6,8 @@ var express = require('express'),
 var config = require('./server/config.json');
 var path = require('path');
 var fs = require('fs');
+var blacklist = require('express-blacklist');
+var IPList = {};
 
 var isProduction = false; //process.env.NODE_ENV === 'production';
 var app = express();
@@ -23,6 +25,7 @@ app.use(function(req, res, next) {
 //uncomment in PROD
 var helmet = require('helmet');
 app.use(helmet());
+app.use(blacklist.blockRequests('./IP_Blacklist.txt'));
 
 
 app.disable('x-powered-by');
@@ -37,7 +40,6 @@ if (isProduction) {
   mongoose.connect(process.env.MONGODB_URI);
 }
 else {
-  var config = require('./server/config.json');
   mongoose.connect(config.dataBase.connectionString);
 }
 
@@ -100,15 +102,19 @@ app.use(function(err, req, res, next) {
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
 
-  var fs = require('fs');
-  var file = path.join(__dirname, '/text2data/dist', req.path);
-  //console.log(file);
+  if (req.trueIP) {
+    if (IPList[req.trueIP]) {
+      IPList[req.trueIP] = IPList[req.trueIP] + 1;
+    }
+    else { IPList[req.trueIP] = 1; }
 
-  if (fs.existsSync(file)) {
-    console.log("File exists");
+    if (IPList[req.trueIP] > 3) {
+      blacklist.addAddress(req.trueIP);
+    }
+
   }
 
-  console.log(JSON.stringify(req.originalUrl));
+
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
