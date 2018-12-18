@@ -21,7 +21,7 @@
                     <td><a :href="getLink(item.label)" class="is-link" download>{{item.label}}</a>
                     </td>
                     <td>{{item.uploaded}} {{item.owner}}</td>
-                    <td><a href="" class="is-link" download>Delete</a></td>
+                    <td><a @click="deleteFile(index)" class="is-link" download>Delete</a></td>
                 </tr>
             </tbody>
         </table>
@@ -55,7 +55,7 @@
       ])
     },
     methods: {
-      ...mapActions(['fetchActiveProject']),
+      ...mapActions(['fetchActiveProject', 'deleteOutputFileAPI']),
       isSelected: function(index) {
         return {
           'has-text-weight-bold': (this.selectedFile === index)
@@ -65,6 +65,9 @@
         return '/api/project/' + this.activeProject._id + '/download/' + fname;
       },
 
+      deleteFile(index) {
+        this.deleteOutputFileAPI(index);
+      },
       selectFile: function(index) {
         this.selectedFile = index;
 

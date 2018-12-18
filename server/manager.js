@@ -46,7 +46,7 @@ function processJob(options, io) {
 
           params.zip = { files: res };
           params.zip.folder = options.outputFolder;
-          params.zip.outputName = "coded_" + path.basename(options.files.testData) + ".zip";
+          params.zip.outputName = "coded_" + options.job + "_" + path.basename(options.files.testData) + ".zip";
           console.log("P4:" + JSON.stringify(params.files));
           return processFile(params, "zip");
         }).then((res) => {

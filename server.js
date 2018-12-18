@@ -17,7 +17,7 @@ app.use(function(req, res, next) {
     req.connection.socket.remoteAddress;
 
   if (req.headers['x-forwarded-for']) ip = ip || req.headers['x-forwarded-for'].split(',').pop();
-
+  req.trueIP = ip;
   console.log('%s %s %s', req.method, req.url, ip);
   next();
 });
@@ -107,6 +107,8 @@ app.use(function(req, res, next) {
       IPList[req.trueIP] = IPList[req.trueIP] + 1;
     }
     else { IPList[req.trueIP] = 1; }
+
+    console.log("Request count for this IP is:" + IPList[req.trueIP]);
 
     if (IPList[req.trueIP] > 3) {
       blacklist.addAddress(req.trueIP);
