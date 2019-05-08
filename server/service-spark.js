@@ -6,7 +6,10 @@ var path = require('path');
 var S3FS = require('s3fs');
 var fs = new S3FS(config.s3.bucket, config.s3.options);
 
-var prefix = "s3a://" + config.s3.options.accessKeyId + ":" + config.s3.options.secretAccessKey + "@" + config.s3.bucket + "/";
+process.env['accessKeyId'] = config.s3.options.accessKeyId;
+process.env['secretAccessKey'] = config.s3.options.secretAccessKey;
+
+var prefix = "s3a://" + config.s3.bucket + "/";
 
 sparkQueue.process(function(job, done) {
     console.log("SPARK JOB INPUT DATA:" + JSON.stringify(job.data));
