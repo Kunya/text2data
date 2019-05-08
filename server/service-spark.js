@@ -6,8 +6,8 @@ var path = require('path');
 var S3FS = require('s3fs');
 var fs = new S3FS(config.s3.bucket, config.s3.options);
 
-process.env['accessKeyId'] = config.s3.options.accessKeyId;
-process.env['secretAccessKey'] = config.s3.options.secretAccessKey;
+process.env['S3_accessKeyId'] = config.s3.options.accessKeyId;
+process.env['S3_secretAccessKey'] = config.s3.options.secretAccessKey;
 
 var prefix = "s3a://" + config.s3.bucket + "/";
 
