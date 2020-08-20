@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "archiver": "*",
-    "bcrypt": "^2.0.1",
+    "bcrypt": "^5.0.0",
     "bee-queue": "*",
     "body-parser": "*",
     "child_process": "*",
